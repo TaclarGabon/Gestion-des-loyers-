@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#111111">
-<title>Gestion des loyers V1.3 — Okala & Langley</title>
+<title>Gestion des loyers Premium — Okala & Langley</title>
 <style>
 :root{
-  --bg:#0b0b0c;--surface:#171719;--surface2:#222225;--primary:#c47a2c;--primary2:#e0a458;
+  --bg:#0b0b0c;--surface:#1a1a1d;--primary:#c47a2c;--primary2:#e0a458;
   --text:#f4f4f4;--muted:#b8b8b8;--line:#343434;
   --success-bg:#163322;--success:#7ee787;
   --warning-bg:#3a2816;--warning:#ffcb6b;
@@ -22,7 +22,7 @@ button{cursor:pointer}
 .topbar>div{flex:1}
 .topbar h1{margin:2px 0 0;font-size:clamp(1.7rem,5vw,2.4rem)}
 .eyebrow{margin:0;color:var(--primary);font-weight:850;font-size:.76rem;letter-spacing:.1em;text-transform:uppercase}
-.icon-btn{width:46px;height:46px;border:0;border-radius:50%;background:var(--surface2);color:var(--primary2);border:1px solid var(--line);box-shadow:var(--shadow);font-size:1.35rem;font-weight:800}
+.icon-btn{width:46px;height:46px;border:0;border-radius:50%;background:#fff;color:var(--primary);box-shadow:var(--shadow);font-size:1.35rem;font-weight:800}
 .hidden{visibility:hidden}
 .view{display:none}
 .view.active{display:block}
@@ -40,20 +40,20 @@ button{cursor:pointer}
 .property-name{font-size:1.8rem;font-weight:900}
 .chevron{font-size:2.5rem}
 .unit-card{
-  border:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;
+  border:0;background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;
   display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;text-align:left;color:var(--text)
 }
 .unit-card strong,.unit-card small{display:block}
 .unit-card small{margin-top:5px;color:var(--muted)}
-.unit-icon{background:rgba(196,122,44,.18);font-size:1.8rem}
+.unit-icon{background:#e4f7f4;font-size:1.8rem}
 .status{display:inline-flex;border-radius:999px;padding:7px 11px;font-weight:800;font-size:.78rem;white-space:nowrap}
 .success{background:var(--success-bg);color:var(--success)}
 .warning{background:var(--warning-bg);color:var(--warning)}
-.panel{margin-top:20px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow)}
+.panel{margin-top:20px;background:#fff;border-radius:var(--radius);padding:22px;box-shadow:var(--shadow)}
 .panel h3{margin:0 0 8px}
 .panel p{line-height:1.55}
 .summary-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:20px}
-.summary{padding:20px;background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow)}
+.summary{padding:20px;background:#fff;border-radius:20px;box-shadow:var(--shadow)}
 .summary span,.summary strong{display:block}.summary span{color:var(--muted)}.summary strong{margin-top:8px;font-size:1.35rem}
 .table-wrap{overflow:auto}
 table{width:100%;border-collapse:collapse;min-width:650px}
@@ -65,20 +65,20 @@ th{color:var(--muted);font-size:.82rem}
 .panel-title{display:flex;justify-content:space-between;align-items:flex-start;gap:15px}
 .panel-title p{margin:0;color:var(--muted)}
 .rent-amount{padding:18px 0}.rent-amount span,.rent-amount strong{display:block}.rent-amount strong{font-size:2rem;margin-top:4px}
-.note{padding:16px;border-radius:17px;background:var(--surface2);border:1px solid var(--line);display:grid;gap:5px}
+.note{padding:16px;border-radius:17px;background:#f0fdfa;border:1px solid var(--line);display:grid;gap:5px}
 .form{display:grid;gap:14px;margin-top:18px}
 .form label{display:grid;gap:7px;color:var(--muted);font-weight:700}
 .form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-input{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:14px;background:#101011;color:var(--text)}
+input{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:14px}
 .primary,.secondary{border:0;border-radius:15px;padding:13px 17px;font-weight:850}
-.primary{background:var(--primary);color:#fff}.secondary{background:var(--surface2);color:var(--primary2);border:1px solid var(--line)}
+.primary{background:var(--primary);color:#fff}.secondary{background:#e4f7f4;color:var(--primary)}
 .reminder{display:flex;justify-content:space-between;align-items:center;gap:18px;border:1px solid var(--line);border-radius:18px;padding:18px;margin-top:14px}
 .reminder span,.reminder strong,.reminder small{display:block}.reminder strong{font-size:1.45rem;margin:4px 0}.reminder small{color:var(--muted)}
 .check{display:flex;align-items:center;gap:9px;padding:9px 13px;border-radius:999px;background:var(--warning-bg);color:var(--warning);font-weight:850}
 .check.checked{background:var(--success-bg);color:var(--success)}
 .check input{width:21px;height:21px}
 .saved{margin-top:14px;display:grid;gap:10px}
-.saved>div{padding:14px;background:var(--surface2);border:1px solid var(--line);border-radius:16px}
+.saved>div{padding:14px;background:#f7fbfa;border:1px solid var(--line);border-radius:16px}
 .history{display:grid;gap:12px;margin-top:16px}
 .history-row{border:1px solid var(--line);border-radius:17px;padding:16px;display:grid;grid-template-columns:1fr repeat(3,auto);gap:10px;align-items:center}
 .pill{font-size:.76rem;font-weight:850;padding:7px 9px;border-radius:999px}
@@ -90,7 +90,23 @@ input{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:14
   .month-card p{text-align:left}
   .history-row{grid-template-columns:1fr 1fr}.history-row strong{grid-column:1/-1}
 }
-.light{color:#fff!important}.download-btn{display:inline-flex;align-items:center;text-decoration:none;white-space:nowrap}.version-chip{display:inline-flex;margin-top:12px;padding:7px 11px;border-radius:999px;background:rgba(255,255,255,.16);font-weight:800;font-size:.78rem}tbody tr:hover{background:rgba(196,122,44,.08)}
+
+/* V1.3 — Dark Premium noir/cuivre */
+:root{--bg:#0b0a09;--surface:#151210;--surface-2:#1d1815;--text:#f7efe8;--muted:#bcaea3;--primary:#c88752;--primary-2:#e5b07f;--line:#3c2d24;--success:#8fd3a7;--success-bg:#173225;--warning:#f0bd73;--warning-bg:#3a2a14}
+body{background:radial-gradient(circle at top,#2a1c14 0,#0b0a09 42%);color:var(--text)}
+.topbar,.panel,.summary,.month-card,.property-card,.unit-card{background:rgba(21,18,16,.96);border-color:var(--line);box-shadow:0 18px 50px rgba(0,0,0,.28)}
+.hero,.profile{background:linear-gradient(135deg,#2a1b13,#17110d 62%,#4a2c18);border:1px solid #6c4328}
+.eyebrow,.property-name,.panel h3{color:var(--primary-2)}
+input{background:#0f0d0c;color:var(--text);border-color:#4b372b}
+input::placeholder{color:#7e7066}
+.primary{background:linear-gradient(135deg,#b36d38,#d99a62);color:#140d09}.secondary{background:#2a1c14;color:#efc49f;border:1px solid #684329}
+.note,.saved>div{background:#191411;border-color:#493326;color:var(--text)}
+.table-wrap table{color:var(--text)}
+th{color:#e9b888}.download-card{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-top:16px;padding:18px;border:1px solid var(--line);border-radius:18px;background:rgba(21,18,16,.96)}
+.download-card strong,.download-card span{display:block}.download-card span{color:var(--muted);margin-top:4px}.download-link{text-decoration:none;white-space:nowrap}
+.bank-form{margin-top:18px}.bank-history{display:grid;gap:10px;margin-top:16px}.bank-entry{padding:14px;border:1px solid var(--line);border-radius:15px;background:#191411}.bank-entry strong{color:var(--primary-2)}
+@media(max-width:680px){.download-card{flex-direction:column;align-items:flex-start}.download-link{width:100%;text-align:center}}
+
 </style>
 </head>
 <body>
@@ -107,7 +123,7 @@ input{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:14
   <section id="home" class="view active">
     <div class="hero">
       <h2>Choisis une propriété</h2>
-      <p>Chaque logement possède son propre suivi.</p><span class="version-chip">Version 1.3 · Dark Premium</span>
+      <p>Chaque logement possède son propre suivi.</p>
     </div>
     <div class="cards">
       <button class="property-card nav" data-target="okala" type="button">
@@ -116,6 +132,11 @@ input{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:14
       <button class="property-card nav" data-target="langley" type="button">
         <span class="property-icon">🏢</span><span class="property-name">LANGLEY</span><span class="chevron">›</span>
       </button>
+    </div>
+
+    <div class="download-card">
+      <div><strong>📊 Fichier Excel des loyers</strong><span>Feuilles Sandrine et Nelly intégrées à la V1.3.</span></div>
+      <a class="primary download-link" href="data/Suivi_loyers_Okala_V1_3.xlsx" download>Télécharger Excel</a>
     </div>
   </section>
 
@@ -132,48 +153,58 @@ input{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:14
   </section>
 
   <section id="sandrine" class="view">
-    <div class="profile"><p class="eyebrow light">OKALA — Studio 1</p><h2>Sandrine Boutoto Pandza</h2><p>Le loyer du mois en cours doit être versé entre le 16 et le 19.</p></div>
-    <div class="summary-grid"><div class="summary"><span>Total dû enregistré</span><strong>4 740 000 FCFA</strong></div><div class="summary"><span>Total versé enregistré</span><strong>4 700 000 FCFA</strong></div></div>
-    <div class="panel"><div class="panel-title"><div><h3>Feuille Excel complète — Sandrine</h3><p>Historique intégré depuis le fichier validé.</p></div><a class="secondary download-btn" href="data/Suivi_loyers_Okala_version_validee.xlsx" download>Télécharger Excel</a></div>
-    <div class="table-wrap"><table><thead><tr><th>Période</th><th>Date du reçu</th><th>N° du reçu</th><th>Dû</th><th>Versé</th><th>Statut</th><th>Note</th></tr></thead><tbody><tr><td>Mai 2025 + caution</td><td>6 mai 2025</td><td>Reçu quittance loyer</td><td>640 000 FCFA</td><td>640 000 FCFA</td><td><span class="status success">Payé</span></td><td>Somme utilisée dans les provisions des travaux du studio n°2</td></tr>
-<tr><td>Juin 2025</td><td>16 juin 2025</td><td>UGB N°624676</td><td>320 000 FCFA</td><td>320 000 FCFA</td><td><span class="status success">Payé</span></td><td>—</td></tr>
-<tr><td>Juillet 2025</td><td>31 juil. 2021</td><td>UGB N°630062</td><td>285 000 FCFA</td><td>285 000 FCFA</td><td><span class="status success">Payé</span></td><td>Date du reçu à vérifier dans le fichier d'origine; déduction de 35 000 FCFA pour la réouverture du compteur d'eau</td></tr>
-<tr><td>Août 2025</td><td>3 sept. 2025</td><td>UGB N°634368</td><td>295 000 FCFA</td><td>295 000 FCFA</td><td><span class="status success">Payé</span></td><td>—</td></tr>
-<tr><td>Septembre 2025</td><td>18 sept. 2025</td><td>UGB N°636530</td><td>320 000 FCFA</td><td>320 000 FCFA</td><td><span class="status success">Payé</span></td><td>—</td></tr>
-<tr><td>Octobre 2025</td><td>29 oct. 2025</td><td>UGB N°161503</td><td>320 000 FCFA</td><td>320 000 FCFA</td><td><span class="status success">Payé</span></td><td>—</td></tr>
-<tr><td>Novembre 2025</td><td>18 nov. 2025</td><td>UGB N°162216</td><td>320 000 FCFA</td><td>320 000 FCFA</td><td><span class="status success">Payé</span></td><td>—</td></tr>
-<tr><td>Décembre 2025</td><td>17 déc. 2025</td><td>UGB N°163419</td><td>320 000 FCFA</td><td>300 000 FCFA</td><td><span class="status warning">Partiel</span></td><td>Déduction de 20 000 FCFA pour des frais d'électricité avancés</td></tr>
-<tr><td>Janvier 2026</td><td>17 janv. 2026</td><td>UGB N°164588</td><td>320 000 FCFA</td><td>320 000 FCFA</td><td><span class="status success">Payé</span></td><td>—</td></tr>
-<tr><td>Février 2026</td><td>18 févr. 2026</td><td>UGB N°165855</td><td>320 000 FCFA</td><td>320 000 FCFA</td><td><span class="status success">Payé</span></td><td>—</td></tr>
-<tr><td>Mars 2026</td><td>9 avr. 2026</td><td>—</td><td>320 000 FCFA</td><td>300 000 FCFA</td><td><span class="status warning">Partiel</span></td><td>Payé avec trois semaines de retard et incomplet</td></tr>
-<tr><td>Mai 2026</td><td>19 mai 2026</td><td>UGB N°169486</td><td>320 000 FCFA</td><td>320 000 FCFA</td><td><span class="status success">Payé</span></td><td>Bordereau UGB fourni</td></tr>
-<tr><td>Juin 2026</td><td>16 juin 2026</td><td>UGB N°170608</td><td>320 000 FCFA</td><td>320 000 FCFA</td><td><span class="status success">Payé</span></td><td>Bordereau UGB fourni</td></tr>
-<tr><td>Juillet 2026</td><td>17 juil. 2026</td><td>UGB N°172355</td><td>320 000 FCFA</td><td>320 000 FCFA</td><td><span class="status success">Payé</span></td><td>Bordereau UGB fourni</td></tr></tbody></table></div>
-    <div class="note"><strong>Arrangement particulier</strong><span>Les écarts ou déductions convenus ne sont pas affichés comme un reste à payer.</span></div></div>
+    <div class="profile"><p class="eyebrow" style="color:white">OKALA — Studio 1</p><h2>Sandrine Boutoto Pandza</h2><p>Paiement entre le 16 et le 19 du mois.</p></div>
+    <div class="summary-grid">
+      <div class="summary"><span>Total dû</span><strong>960 000 FCFA</strong></div>
+      <div class="summary"><span>Total payé</span><strong>960 000 FCFA</strong></div>
+    </div>
+    <div class="panel"><h3>Paiements enregistrés</h3><div class="table-wrap"><table>
+      <thead><tr><th>Mois</th><th>Date</th><th>Réf. UGB</th><th>Montant</th><th>Statut</th></tr></thead>
+      <tbody>
+        <tr><td>Mai 2026</td><td>19 mai</td><td>169486</td><td>320 000 FCFA</td><td><span class="status success">Payé</span></td></tr>
+        <tr><td>Juin 2026</td><td>16 juin</td><td>170608</td><td>320 000 FCFA</td><td><span class="status success">Payé</span></td></tr>
+        <tr><td>Juillet 2026</td><td>17 juillet</td><td>172355</td><td>320 000 FCFA</td><td><span class="status success">Payé</span></td></tr>
+      </tbody>
+    </table></div></div>
+
+    <div class="panel bank-form">
+      <div class="panel-title"><div><h3>Ajouter un bordereau UGB</h3><p>Le bordereau reste enregistré uniquement dans le compte de Sandrine.</p></div></div>
+      <form id="sandrineUgbForm" class="form">
+        <div class="form-grid">
+          <label>Mois concerné<input id="sandrineMonth" placeholder="Ex. Août 2026" required></label>
+          <label>Date du versement<input id="sandrineDate" type="date" required></label>
+          <label>Référence du bordereau<input id="sandrineReference" placeholder="Ex. 173245" required></label>
+          <label>Montant versé<input id="sandrineAmount" placeholder="Ex. 320 000 FCFA" required></label>
+        </div>
+        <label>Photo ou PDF du bordereau<input id="sandrineProof" type="file" accept="image/*,.pdf"></label>
+        <button class="primary" type="submit">Enregistrer le bordereau de Sandrine</button>
+      </form>
+      <div id="sandrineUgbHistory" class="bank-history"></div>
+    </div>
   </section>
 
   <section id="nelly" class="view">
-    <div class="profile"><p class="eyebrow light">OKALA — Studio 2</p><h2>Nelly Loriane Engong Ngomo</h2><p>Le loyer du mois concerné doit être versé entre le 1er et le 5 du mois suivant.</p></div>
-    <div class="summary-grid"><div class="summary"><span>Reliquat actuel</span><strong>100 000 FCFA</strong></div><div class="summary"><span>Dette initiale informative</span><strong>800 000 FCFA</strong></div></div>
-    <div class="panel"><div class="panel-title"><div><h3>Feuille Excel complète — Nelly</h3><p>Historique et échéances futures intégrés depuis le fichier validé.</p></div><a class="secondary download-btn" href="data/Suivi_loyers_Okala_version_validee.xlsx" download>Télécharger Excel</a></div>
-    <div class="table-wrap"><table><thead><tr><th>Période</th><th>Date du reçu</th><th>N° du reçu</th><th>Dû</th><th>Versé</th><th>Statut</th><th>Note</th></tr></thead><tbody><tr><td>Août 2025</td><td>6 mai 2025</td><td>—</td><td>100 000 FCFA</td><td>100 000 FCFA</td><td><span class="status success">Payé</span></td><td>—</td></tr>
-<tr><td>Septembre 2025</td><td>11 juin 2025</td><td>—</td><td>100 000 FCFA</td><td>100 000 FCFA</td><td><span class="status success">Payé</span></td><td>—</td></tr>
-<tr><td>Octobre 2025</td><td>11 juin 2025</td><td>—</td><td>100 000 FCFA</td><td>100 000 FCFA</td><td><span class="status success">Payé</span></td><td>—</td></tr>
-<tr><td>Novembre 2025</td><td>30 déc. 2025</td><td>—</td><td>100 000 FCFA</td><td>100 000 FCFA</td><td><span class="status success">Payé</span></td><td>—</td></tr>
-<tr><td>Décembre 2025</td><td>31 janv. 2026</td><td>—</td><td>100 000 FCFA</td><td>100 000 FCFA</td><td><span class="status success">Payé</span></td><td>—</td></tr>
-<tr><td>Janvier 2026</td><td>8 avr. 2026</td><td>—</td><td>100 000 FCFA</td><td>100 000 FCFA</td><td><span class="status success">Payé</span></td><td>—</td></tr>
-<tr><td>Février 2026</td><td>8 avr. 2026</td><td>—</td><td>100 000 FCFA</td><td>100 000 FCFA</td><td><span class="status success">Payé</span></td><td>—</td></tr>
-<tr><td>Mars 2026</td><td>8 mai 2026</td><td>—</td><td>100 000 FCFA</td><td>100 000 FCFA</td><td><span class="status success">Payé</span></td><td>—</td></tr>
-<tr><td>Avril 2026</td><td>29 juin 2026</td><td>—</td><td>150 000 FCFA</td><td>100 000 FCFA</td><td><span class="status warning">Partiel</span></td><td>Reliquat à payer</td></tr>
-<tr><td>Mai 2026</td><td>29 juin 2026</td><td>—</td><td>150 000 FCFA</td><td>100 000 FCFA</td><td><span class="status warning">Partiel</span></td><td>Reliquat à payer</td></tr>
-<tr><td>Juin 2026</td><td>29 juin 2026</td><td>—</td><td>150 000 FCFA</td><td>150 000 FCFA</td><td><span class="status success">Payé</span></td><td>—</td></tr>
-<tr><td>Juillet 2026</td><td>29 juin 2026</td><td>—</td><td>150 000 FCFA</td><td>150 000 FCFA</td><td><span class="status success">Payé</span></td><td>—</td></tr>
-<tr><td>Août 2026</td><td>—</td><td>—</td><td>150 000 FCFA</td><td>—</td><td><span class="status warning">À venir</span></td><td>Échéance future — non incluse dans le reste à payer</td></tr>
-<tr><td>Septembre 2026</td><td>—</td><td>—</td><td>150 000 FCFA</td><td>—</td><td><span class="status warning">À venir</span></td><td>Échéance future — non incluse dans le reste à payer</td></tr>
-<tr><td>Octobre 2026</td><td>—</td><td>—</td><td>150 000 FCFA</td><td>—</td><td><span class="status warning">À venir</span></td><td>Échéance future — non incluse dans le reste à payer</td></tr>
-<tr><td>Novembre 2026</td><td>—</td><td>—</td><td>150 000 FCFA</td><td>—</td><td><span class="status warning">À venir</span></td><td>Échéance future — non incluse dans le reste à payer</td></tr>
-<tr><td>Décembre 2026</td><td>—</td><td>—</td><td>150 000 FCFA</td><td>—</td><td><span class="status warning">À venir</span></td><td>Échéance future — non incluse dans le reste à payer</td></tr></tbody></table></div>
-    <div class="note"><strong>Informations historiques</strong><span>50 000 FCFA déjà versés à Christina en décembre 2021.</span><span>Remise des clés le 8 août 2025.</span><span>Loyer : 100 000 FCFA jusqu’en mars 2026, puis 150 000 FCFA à partir d’avril 2026.</span></div></div>
+    <div class="profile"><p class="eyebrow" style="color:white">OKALA — Studio 2</p><h2>Nelly Loriane Engong Ngomo</h2><p>Paiement entre le 1er et le 5 du mois suivant.</p></div>
+    <div class="summary-grid">
+      <div class="summary"><span>Reliquat actuel</span><strong>100 000 FCFA</strong></div>
+      <div class="summary"><span>Origine</span><strong>Avril + mai</strong></div>
+    </div>
+    <div class="panel"><h3>Historique informatif</h3><p>Dette historique : <strong>800 000 FCFA</strong>. Cette information ne rentre pas dans le calcul du reliquat actuel.</p><div class="note"><span>Ancien loyer : 100 000 FCFA</span><span>Nouveau loyer depuis avril : 150 000 FCFA</span><span>Écart restant : 50 000 FCFA en avril + 50 000 FCFA en mai</span></div></div>
+
+    <div class="panel bank-form">
+      <div class="panel-title"><div><h3>Ajouter un bordereau UGB</h3><p>Le bordereau reste enregistré uniquement dans le compte de Nelly.</p></div></div>
+      <form id="nellyUgbForm" class="form">
+        <div class="form-grid">
+          <label>Mois concerné<input id="nellyMonth" placeholder="Ex. Juillet 2026" required></label>
+          <label>Date du versement<input id="nellyDate" type="date" required></label>
+          <label>Référence du bordereau<input id="nellyReference" placeholder="Ex. 173246" required></label>
+          <label>Montant versé<input id="nellyAmount" placeholder="Ex. 150 000 FCFA" required></label>
+        </div>
+        <label>Photo ou PDF du bordereau<input id="nellyProof" type="file" accept="image/*,.pdf"></label>
+        <button class="primary" type="submit">Enregistrer le bordereau de Nelly</button>
+      </form>
+      <div id="nellyUgbHistory" class="bank-history"></div>
+    </div>
   </section>
 
   <section id="langley" class="view">
@@ -245,7 +276,8 @@ input{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:14
       rent:{paid:false,reference:"",date:"",sender:"Rylie Matson",amount:"2 495,00 $",fileName:""},
       mortgage:false,
       strata:false,
-      history:[]
+      history:[],
+      ugb:{sandrine:[],nelly:[]}
     };
   }
 
@@ -259,6 +291,9 @@ input{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:14
   }
 
   var state = load();
+  if(!state.ugb) state.ugb={sandrine:[],nelly:[]};
+  if(!state.ugb.sandrine) state.ugb.sandrine=[];
+  if(!state.ugb.nelly) state.ugb.nelly=[];
 
   function save(){
     try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
@@ -302,6 +337,26 @@ input{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:14
     go("home");
     toast("Démonstration réinitialisée");
   });
+
+
+  function bindUgbForm(person){
+    var form=document.getElementById(person+"UgbForm");
+    form.addEventListener("submit",function(e){
+      e.preventDefault();
+      var proof=document.getElementById(person+"Proof").files[0];
+      var entry={
+        month:document.getElementById(person+"Month").value.trim(),
+        date:document.getElementById(person+"Date").value,
+        reference:document.getElementById(person+"Reference").value.trim(),
+        amount:document.getElementById(person+"Amount").value.trim(),
+        fileName:proof?proof.name:"Aucune preuve jointe"
+      };
+      state.ugb[person].unshift(entry);
+      save();form.reset();renderUgb(person);toast("Bordereau UGB enregistré");
+    });
+  }
+  bindUgbForm("sandrine");
+  bindUgbForm("nelly");
 
   document.getElementById("interacForm").addEventListener("submit", function(e){
     e.preventDefault();
@@ -347,6 +402,19 @@ input{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:14
     });
   }
 
+
+  function renderUgb(person){
+    var box=document.getElementById(person+"UgbHistory");
+    var rows=state.ugb[person]||[];
+    if(!rows.length){box.innerHTML='<p style="color:var(--muted)">Aucun nouveau bordereau saisi pour le moment.</p>';return;}
+    var out="";
+    for(var i=0;i<rows.length;i++){
+      var e=rows[i];
+      out+='<div class="bank-entry"><strong>'+esc(e.month)+' — '+esc(e.amount)+'</strong><br>'+esc(e.date)+' · Réf. UGB '+esc(e.reference)+'<br><small>Preuve : '+esc(e.fileName)+'</small></div>';
+    }
+    box.innerHTML=out;
+  }
+
   function render(){
     var rentStatus=document.getElementById("rentStatus");
     rentStatus.textContent=state.rent.paid ? "Payé par Interac" : "En attente";
@@ -368,6 +436,8 @@ input{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:14
         'Preuve : '+esc(state.rent.fileName)+'</div>';
     }else result.innerHTML="";
     renderHistory();
+    renderUgb("sandrine");
+    renderUgb("nelly");
   }
 
   function renderHistory(){
