@@ -404,37 +404,96 @@ th{color:#e9b888}.download-card{display:flex;justify-content:space-between;align
     return months[d.getMonth()]+" "+d.getFullYear();
   }
 
-  function parseOcrText(text){
-    var clean=String(text||"").replace(/\u00a0/g," ");
-    var compact=clean.replace(/[|]/g," ");
-    var date="";
+  function normalizeOcrText(text){
+    return String(text||"").replace(/\u00a0/g," ").replace(/[|]/g," ").replace(/[’‘]/g,"'");
+  }
+
+  function parseFrenchDate(text){
+    var compact=normalizeOcrText(text);
     var dm=compact.match(/\b([0-3]?\d)[\/.\-]([01]?\d)[\/.\-](20\d{2}|\d{2})\b/);
     if(dm){
       var year=dm[3].length===2?"20"+dm[3]:dm[3];
-      date=year+"-"+pad2(dm[2])+"-"+pad2(dm[1]);
+      return year+"-"+pad2(dm[2])+"-"+pad2(dm[1]);
     }
-
-    var reference="";
-    var rm=compact.match(/(?:réf(?:érence)?|bordereau|n[°o]|num(?:éro)?)\s*[:#\-]?\s*([A-Z0-9\-]{4,18})/i);
-    if(rm) reference=rm[1].replace(/[^A-Z0-9\-]/gi,"");
-    if(!reference){
-      var candidates=compact.match(/\b\d{5,10}\b/g)||[];
-      reference=candidates.find(function(v){return !/^20\d{2}$/.test(v);})||"";
+    var months={janvier:1,fevrier:2,"février":2,mars:3,avril:4,mai:5,juin:6,juillet:7,aout:8,"août":8,septembre:9,octobre:10,novembre:11,decembre:12,"décembre":12};
+    var words=compact.toLowerCase().match(/(?:le\s*)?([0-3]?\d)\s+(janvier|f[eé]vrier|mars|avril|mai|juin|juillet|ao[uû]t|septembre|octobre|novembre|d[eé]cembre)\s+(20\d{2})/i);
+    if(words){
+      var key=words[2].toLowerCase();
+      return words[3]+"-"+pad2(months[key])+"-"+pad2(words[1]);
     }
+    return "";
+  }
 
+  function parseReference(text){
+    var compact=normalizeOcrText(text);
+    var patterns=[
+      /(?:bordereau[\s\S]{0,80}?(?:esp[eè]ces?\s+tiers?)?[\s\S]{0,30}?)(?:n[°ºo]?|num[eé]ro)?\s*[:#\-]?\s*(\d[\d\s]{4,8})/i,
+      /(?:n[°ºo]|num[eé]ro)\s*[:#\-]?\s*(\d[\d\s]{4,8})/i,
+      /(?:esp[eè]ces?\s+tiers?)[^\d]{0,15}(\d[\d\s]{4,8})/i
+    ];
+    for(var i=0;i<patterns.length;i++){
+      var m=compact.match(patterns[i]);
+      if(m){
+        var digits=m[1].replace(/\D/g,"");
+        if(digits.length>=5 && digits.length<=7) return digits;
+      }
+    }
+    return "";
+  }
+
+  function parseNetAmount(text){
+    var compact=normalizeOcrText(text);
+    var priority=[
+      /montant\s+net[\s\S]{0,45}?(\d{1,3}(?:[ .]\d{3})+|\d{4,9})\s*(?:XAF|FCFA|F\s*CFA|CFA)/i,
+      /montant\s+du\s+versement[\s\S]{0,45}?(\d{1,3}(?:[ .]\d{3})+|\d{4,9})\s*(?:XAF|FCFA|F\s*CFA|CFA)/i
+    ];
+    for(var i=0;i<priority.length;i++){
+      var m=compact.match(priority[i]);
+      if(m){
+        var n=parseInt(m[1].replace(/[ .]/g,""),10);
+        if(!isNaN(n)) return n;
+      }
+    }
     var amounts=[];
-    var amountRegex=/(\d{1,3}(?:[ .]\d{3})+(?:[,.]\d{2})?|\d{4,9})(?=\s*(?:FCFA|F CFA|XAF|CFA))/gi;
+    var amountRegex=/(\d{1,3}(?:[ .]\d{3})+|\d{4,9})(?=\s*(?:FCFA|F\s*CFA|XAF|CFA))/gi;
     var am;
     while((am=amountRegex.exec(compact))!==null){
-      var numeric=parseFloat(am[1].replace(/[ .]/g,"").replace(",","."));
-      if(!isNaN(numeric)) amounts.push(numeric);
+      var numeric=parseInt(am[1].replace(/[ .]/g,""),10);
+      if(!isNaN(numeric) && numeric>=10000) amounts.push(numeric);
     }
-    if(!amounts.length){
-      var generic=compact.match(/\b\d{2,3}(?:[ .]\d{3})+\b/g)||[];
-      generic.forEach(function(v){var n=parseInt(v.replace(/[ .]/g,""),10);if(n>=10000) amounts.push(n);});
-    }
-    var amount=amounts.length?Math.max.apply(null,amounts):null;
-    return {date:date,reference:reference,amount:amount};
+    return amounts.length?Math.max.apply(null,amounts):null;
+  }
+
+  function parseOcrText(text, referenceZoneText){
+    return {
+      date:parseFrenchDate(text),
+      reference:parseReference(referenceZoneText)||parseReference(text),
+      amount:parseNetAmount(text)
+    };
+  }
+
+  function loadImageFile(file){
+    return new Promise(function(resolve,reject){
+      var img=new Image();
+      var url=URL.createObjectURL(file);
+      img.onload=function(){URL.revokeObjectURL(url);resolve(img);};
+      img.onerror=function(){URL.revokeObjectURL(url);reject(new Error("Image illisible"));};
+      img.src=url;
+    });
+  }
+
+  async function recognizeReferenceZone(worker,file){
+    var img=await loadImageFile(file);
+    var canvas=document.createElement("canvas");
+    /* Zone supérieure droite du modèle UGB : numéro et date du bordereau. */
+    var sx=Math.round(img.naturalWidth*0.60), sy=Math.round(img.naturalHeight*0.04);
+    var sw=Math.round(img.naturalWidth*0.36), sh=Math.round(img.naturalHeight*0.20);
+    canvas.width=sw*3; canvas.height=sh*3;
+    var ctx=canvas.getContext("2d");
+    ctx.filter="grayscale(1) contrast(1.8)";
+    ctx.drawImage(img,sx,sy,sw,sh,0,0,canvas.width,canvas.height);
+    var zone=await worker.recognize(canvas,{rectangle:{left:0,top:0,width:canvas.width,height:canvas.height}});
+    return zone.data.text||"";
   }
 
   async function readUgbProof(person){
@@ -454,8 +513,11 @@ th{color:#e9b888}.download-card{display:flex;justify-content:space-between;align
         if(m.status==="recognizing text") setOcrStatus(person,"Lecture : "+Math.round((m.progress||0)*100)+" %","working");
       }});
       var result=await worker.recognize(file);
+      setOcrStatus(person,"Lecture ciblée du numéro de bordereau…","working");
+      var referenceZoneText="";
+      try{referenceZoneText=await recognizeReferenceZone(worker,file);}catch(zoneError){console.warn(zoneError);}
       await worker.terminate();
-      var parsed=parseOcrText(result.data.text);
+      var parsed=parseOcrText(result.data.text,referenceZoneText);
       if(parsed.date) document.getElementById(person+"Date").value=parsed.date;
       if(parsed.reference) document.getElementById(person+"Reference").value=parsed.reference;
       if(parsed.amount) document.getElementById(person+"Amount").value=new Intl.NumberFormat("fr-FR").format(parsed.amount)+" FCFA";
