@@ -393,7 +393,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   async function syncStateToFirebase(){
     if(!firebaseReady || !currentFirebaseUser || !db || remoteLoading) return;
     try{
-      await db.collection("parametres").doc(currentFirebaseUser.uid).set({
+      await db.collection("parametres").doc("gestion-loyers-partagee").set({
         state:cleanForFirestore(state),
         updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
         updatedBy:currentFirebaseUser.email||""
@@ -408,7 +408,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   async function addPaymentToFirebase(type,person,entry){
     if(!firebaseReady || !currentFirebaseUser || !db) return;
     try{
-      await db.collection("loyers").doc(currentFirebaseUser.uid).collection("paiements").add({
+      await db.collection("loyers").doc("gestion-loyers-partagee").collection("paiements").add({
         type:type,
         locataire:person,
         logement:person==="sandrine"?"Okala — Studio 1":person==="nelly"?"Okala — Studio 2":"Langley — B317",
@@ -442,7 +442,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         if(logout) logout.hidden=false;
         setFirebaseStatus("Connexion à Firestore…","");
         try{
-          var snap=await db.collection("parametres").doc(user.uid).get();
+          var snap=await db.collection("parametres").doc("gestion-loyers-partagee").get();
           if(snap.exists && snap.data() && snap.data().state){
             remoteLoading=true;
             state=snap.data().state;
@@ -545,7 +545,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     var button=document.getElementById("loginButton"),error=document.getElementById("authError");
     error.textContent="";button.disabled=true;button.textContent="Connexion…";
     try{await auth.signInWithEmailAndPassword(email,password);document.getElementById("loginPassword").value="";}
-    catch(err){console.error(err);error.textContent="Connexion refusée. Vérifie l’adresse e-mail et le mot de passe.";}
+    catch(err){console.error(err);var code=(err&&err.code)?err.code:"erreur-inconnue"; error.textContent="Connexion impossible ("+code+").";}
     finally{button.disabled=false;button.textContent="Se connecter";}
   });
   document.getElementById("logoutBtn").addEventListener("click",function(){if(auth)auth.signOut();});
@@ -1058,6 +1058,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     box.innerHTML=out;
   }
 
+  initFirebase();
   render();
   go("home");
 })();

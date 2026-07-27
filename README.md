@@ -1,16 +1,9 @@
-# Gestion des loyers — V1.5 Firebase
+# Gestion des loyers — V1.5.1 Firebase corrigée
 
-Version construite à partir de la V1.4.3.2 validée.
+Corrections :
+- initialisation Firebase réellement exécutée au démarrage ;
+- message d’erreur Firebase précis ;
+- données communes partagées entre Edan et Otilia ;
+- conservation des fonctions Excel validées de la V1.4.3.2.
 
-## Déploiement GitHub Pages
-Déposez à la racine du dépôt :
-- `index.html`
-- le dossier `data`
-
-## Firebase
-- Projet : `gestion-loyers-edan`
-- Authentication : adresse e-mail / mot de passe
-- Firestore : sauvegarde de l'état dans `parametres/{uid}`
-- Paiements : `loyers/{uid}/paiements/{id}`
-
-La première utilisation doit se faire avec une connexion Internet depuis GitHub Pages.
+Déposer `index.html`, `README.md` et le dossier `data` sur GitHub Pages.
