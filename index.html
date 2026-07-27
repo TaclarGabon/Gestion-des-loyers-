@@ -187,8 +187,12 @@ th{color:#e9b888}.download-card{display:flex;justify-content:space-between;align
           <label>Référence du bordereau<input id="sandrineReference" placeholder="Ex. 173245" required></label>
           <label>Montant versé<input id="sandrineAmount" placeholder="Ex. 320 000 FCFA" required></label>
         </div>
-        <label>Photo ou PDF du bordereau<input id="sandrineProof" type="file" accept="image/*,.pdf"></label>
-        <button class="primary" type="submit">Enregistrer le bordereau de Sandrine</button>
+        <label>Photo du bordereau à analyser<input id="sandrineProof" type="file" accept="image/*,.pdf"></label>
+        <div class="ocr-row">
+          <button id="sandrineOcrButton" class="secondary" type="button">🔎 Lire et préremplir</button>
+          <span id="sandrineOcrStatus" class="ocr-status">Choisis une photo nette du bordereau.</span>
+        </div>
+        <button class="primary" type="submit">Vérifier puis enregistrer le bordereau de Sandrine</button>
       </form>
       <div id="sandrineUgbHistory" class="bank-history"></div>
     </div>
@@ -241,8 +245,12 @@ th{color:#e9b888}.download-card{display:flex;justify-content:space-between;align
           <label>Référence du bordereau<input id="nellyReference" placeholder="Ex. 173246" required></label>
           <label>Montant versé<input id="nellyAmount" placeholder="Ex. 150 000 FCFA" required></label>
         </div>
-        <label>Photo ou PDF du bordereau<input id="nellyProof" type="file" accept="image/*,.pdf"></label>
-        <button class="primary" type="submit">Enregistrer le bordereau de Nelly</button>
+        <label>Photo du bordereau à analyser<input id="nellyProof" type="file" accept="image/*,.pdf"></label>
+        <div class="ocr-row">
+          <button id="nellyOcrButton" class="secondary" type="button">🔎 Lire et préremplir</button>
+          <span id="nellyOcrStatus" class="ocr-status">Choisis une photo nette du bordereau.</span>
+        </div>
+        <button class="primary" type="submit">Vérifier puis enregistrer le bordereau de Nelly</button>
       </form>
       <div id="nellyUgbHistory" class="bank-history"></div>
     </div>
@@ -303,6 +311,7 @@ th{color:#e9b888}.download-card{display:flex;justify-content:space-between;align
 
 <div id="toast" class="toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script>
 (function(){
   "use strict";
@@ -379,6 +388,95 @@ th{color:#e9b888}.download-card{display:flex;justify-content:space-between;align
     toast("Démonstration réinitialisée");
   });
 
+
+  function setOcrStatus(person,message,kind){
+    var el=document.getElementById(person+"OcrStatus");
+    el.textContent=message;
+    el.className="ocr-status "+(kind||"");
+  }
+
+  function pad2(n){return String(n).padStart(2,"0");}
+
+  function frenchMonthYear(dateValue){
+    var months=["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+    var d=dateValue?new Date(dateValue+"T12:00:00"):new Date();
+    if(isNaN(d.getTime())) d=new Date();
+    return months[d.getMonth()]+" "+d.getFullYear();
+  }
+
+  function parseOcrText(text){
+    var clean=String(text||"").replace(/\u00a0/g," ");
+    var compact=clean.replace(/[|]/g," ");
+    var date="";
+    var dm=compact.match(/\b([0-3]?\d)[\/.\-]([01]?\d)[\/.\-](20\d{2}|\d{2})\b/);
+    if(dm){
+      var year=dm[3].length===2?"20"+dm[3]:dm[3];
+      date=year+"-"+pad2(dm[2])+"-"+pad2(dm[1]);
+    }
+
+    var reference="";
+    var rm=compact.match(/(?:réf(?:érence)?|bordereau|n[°o]|num(?:éro)?)\s*[:#\-]?\s*([A-Z0-9\-]{4,18})/i);
+    if(rm) reference=rm[1].replace(/[^A-Z0-9\-]/gi,"");
+    if(!reference){
+      var candidates=compact.match(/\b\d{5,10}\b/g)||[];
+      reference=candidates.find(function(v){return !/^20\d{2}$/.test(v);})||"";
+    }
+
+    var amounts=[];
+    var amountRegex=/(\d{1,3}(?:[ .]\d{3})+(?:[,.]\d{2})?|\d{4,9})(?=\s*(?:FCFA|F CFA|XAF|CFA))/gi;
+    var am;
+    while((am=amountRegex.exec(compact))!==null){
+      var numeric=parseFloat(am[1].replace(/[ .]/g,"").replace(",","."));
+      if(!isNaN(numeric)) amounts.push(numeric);
+    }
+    if(!amounts.length){
+      var generic=compact.match(/\b\d{2,3}(?:[ .]\d{3})+\b/g)||[];
+      generic.forEach(function(v){var n=parseInt(v.replace(/[ .]/g,""),10);if(n>=10000) amounts.push(n);});
+    }
+    var amount=amounts.length?Math.max.apply(null,amounts):null;
+    return {date:date,reference:reference,amount:amount};
+  }
+
+  async function readUgbProof(person){
+    var input=document.getElementById(person+"Proof");
+    var file=input.files&&input.files[0];
+    if(!file){setOcrStatus(person,"Ajoute d’abord une photo du bordereau.","error");return;}
+    if(file.type==="application/pdf" || /\.pdf$/i.test(file.name)){
+      setOcrStatus(person,"Pour ce test, utilise une photo JPG ou PNG du bordereau.","error");
+      return;
+    }
+    if(!window.Tesseract){setOcrStatus(person,"Le lecteur automatique ne s’est pas chargé. Vérifie la connexion Internet.","error");return;}
+    var button=document.getElementById(person+"OcrButton");
+    button.disabled=true;
+    setOcrStatus(person,"Lecture du bordereau en cours…","working");
+    try{
+      var worker=await Tesseract.createWorker("fra",1,{logger:function(m){
+        if(m.status==="recognizing text") setOcrStatus(person,"Lecture : "+Math.round((m.progress||0)*100)+" %","working");
+      }});
+      var result=await worker.recognize(file);
+      await worker.terminate();
+      var parsed=parseOcrText(result.data.text);
+      if(parsed.date) document.getElementById(person+"Date").value=parsed.date;
+      if(parsed.reference) document.getElementById(person+"Reference").value=parsed.reference;
+      if(parsed.amount) document.getElementById(person+"Amount").value=new Intl.NumberFormat("fr-FR").format(parsed.amount)+" FCFA";
+      var monthInput=document.getElementById(person+"Month");
+      if(!monthInput.value.trim()) monthInput.value="Août 2026";
+      var found=[];
+      if(parsed.date) found.push("date");
+      if(parsed.reference) found.push("référence");
+      if(parsed.amount) found.push("montant");
+      if(found.length){setOcrStatus(person,"Prérempli : "+found.join(", ")+". Vérifie avant d’enregistrer.","success");}
+      else{setOcrStatus(person,"Lecture terminée, mais aucune donnée fiable détectée. Complète les cases manuellement.","error");}
+    }catch(err){
+      console.error(err);
+      setOcrStatus(person,"Impossible de lire cette image. Essaie une photo plus nette et bien cadrée.","error");
+    }finally{button.disabled=false;}
+  }
+
+  ["sandrine","nelly"].forEach(function(person){
+    document.getElementById(person+"OcrButton").addEventListener("click",function(){readUgbProof(person);});
+    document.getElementById(person+"Proof").addEventListener("change",function(){setOcrStatus(person,"Fichier prêt. Clique sur « Lire et préremplir ».","");});
+  });
 
   function bindUgbForm(person){
     var form=document.getElementById(person+"UgbForm");
