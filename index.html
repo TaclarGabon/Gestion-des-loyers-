@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="fr-CA">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f766e">
+  <meta name="description" content="Application privée de suivi des loyers Okala et Langley.">
+  <title>Gestion des loyers — Okala & Langley</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <button id="backButton" class="icon-button hidden" type="button" aria-label="Retour">←</button>
+      <div>
+        <p class="eyebrow">Gestion des loyers</p>
+        <h1 id="pageTitle">Bonjour Edan 👋</h1>
+      </div>
+      <button id="resetDemoButton" class="icon-button" type="button" aria-label="Réinitialiser la démonstration">↻</button>
+    </header>
+
+    <section id="homeView" class="view active">
+      <div class="welcome-card">
+        <h2>Choisis une propriété</h2>
+        <p>Les loyers, reçus et rappels sont classés séparément par logement.</p>
+      </div>
+
+      <div class="property-list">
+        <button class="property-card" type="button" data-route="okala">
+          <span class="property-icon">🏘️</span>
+          <span class="property-name">OKALA</span>
+          <span class="chevron">›</span>
+        </button>
+
+        <button class="property-card" type="button" data-route="langley">
+          <span class="property-icon">🏢</span>
+          <span class="property-name">LANGLEY</span>
+          <span class="chevron">›</span>
+        </button>
+      </div>
+    </section>
+
+    <section id="okalaView" class="view">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Gabon</p>
+          <h2>OKALA</h2>
+          <p>Deux studios suivis séparément.</p>
+        </div>
+      </div>
+
+      <div class="unit-list">
+        <button class="unit-card" type="button" data-route="sandrine">
+          <span class="unit-icon">🏠</span>
+          <span>
+            <strong>Studio 1</strong>
+            <small>Sandrine Boutoto Pandza</small>
+          </span>
+          <span class="status success">À jour</span>
+          <span class="chevron">›</span>
+        </button>
+
+        <button class="unit-card" type="button" data-route="nelly">
+          <span class="unit-icon">🏠</span>
+          <span>
+            <strong>Studio 2</strong>
+            <small>Nelly Loriane Engong Ngomo</small>
+          </span>
+          <span class="status warning">Reliquat 100 000 FCFA</span>
+          <span class="chevron">›</span>
+        </button>
+      </div>
+    </section>
+
+    <section id="sandrineView" class="view">
+      <div class="profile-card">
+        <p class="eyebrow">OKALA — Studio 1</p>
+        <h2>Sandrine Boutoto Pandza</h2>
+        <p>Paiement mensuel prévu entre le 16 et le 19 du mois.</p>
+      </div>
+
+      <div class="summary-grid">
+        <article class="summary-card">
+          <span>Total dû</span>
+          <strong>960 000 FCFA</strong>
+        </article>
+        <article class="summary-card">
+          <span>Total payé</span>
+          <strong>960 000 FCFA</strong>
+        </article>
+      </div>
+
+      <article class="panel">
+        <div class="panel-title">
+          <div>
+            <h3>Paiements enregistrés</h3>
+            <p>Les bordereaux UGB restent uniquement dans le dossier de Sandrine.</p>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Mois</th><th>Date</th><th>Référence UGB</th><th>Montant</th><th>Statut</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Mai 2026</td><td>19 mai 2026</td><td>169486</td><td>320 000 FCFA</td><td><span class="status success">Payé</span></td></tr>
+              <tr><td>Juin 2026</td><td>16 juin 2026</td><td>170608</td><td>320 000 FCFA</td><td><span class="status success">Payé</span></td></tr>
+              <tr><td>Juillet 2026</td><td>17 juillet 2026</td><td>172355</td><td>320 000 FCFA</td><td><span class="status success">Payé</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="panel">
+        <h3>Ajouter un bordereau UGB</h3>
+        <p class="muted">La version GitHub enregistre localement la référence et le montant saisis après vérification.</p>
+        <form class="upload-form" data-form="ugb-sandrine">
+          <label>Image du bordereau
+            <input type="file" accept="image/*,.pdf">
+          </label>
+          <div class="form-grid">
+            <label>Référence UGB
+              <input name="reference" inputmode="numeric" placeholder="Ex. 172355" required>
+            </label>
+            <label>Montant
+              <input name="amount" placeholder="Ex. 320 000 FCFA" required>
+            </label>
+          </div>
+          <button class="primary-button" type="submit">Enregistrer dans le dossier Sandrine</button>
+        </form>
+        <div class="saved-items" id="sandrineUploads"></div>
+      </article>
+    </section>
+
+    <section id="nellyView" class="view">
+      <div class="profile-card">
+        <p class="eyebrow">OKALA — Studio 2</p>
+        <h2>Nelly Loriane Engong Ngomo</h2>
+        <p>Paiement du loyer entre le 1er et le 5 du mois suivant.</p>
+      </div>
+
+      <div class="summary-grid">
+        <article class="summary-card accent">
+          <span>Reliquat actuel</span>
+          <strong>100 000 FCFA</strong>
+        </article>
+        <article class="summary-card">
+          <span>Origine du reliquat</span>
+          <strong>Avril + mai</strong>
+        </article>
+      </div>
+
+      <article class="panel">
+        <h3>Historique informatif</h3>
+        <p>Dette historique mentionnée : <strong>800 000 FCFA</strong>. Cette information reste visible, mais elle n’entre pas dans le calcul du reliquat actuel.</p>
+        <div class="history-note">
+          <p>Ancien loyer : 100 000 FCFA.</p>
+          <p>Nouveau loyer depuis avril : 150 000 FCFA.</p>
+          <p>Écart restant : 50 000 FCFA pour avril + 50 000 FCFA pour mai.</p>
+        </div>
+      </article>
+
+      <article class="panel">
+        <h3>Ajouter un bordereau UGB</h3>
+        <form class="upload-form" data-form="ugb-nelly">
+          <label>Image du bordereau
+            <input type="file" accept="image/*,.pdf">
+          </label>
+          <div class="form-grid">
+            <label>Référence UGB
+              <input name="reference" placeholder="Numéro du bordereau" required>
+            </label>
+            <label>Montant
+              <input name="amount" placeholder="Montant en FCFA" required>
+            </label>
+          </div>
+          <button class="primary-button" type="submit">Enregistrer dans le dossier Nelly</button>
+        </form>
+        <div class="saved-items" id="nellyUploads"></div>
+      </article>
+    </section>
+
+    <section id="langleyView" class="view">
+      <div class="profile-card langley-hero">
+        <p class="eyebrow">Canada — Condo B317</p>
+        <h2>Rylie Matson &amp; Dustin Hurrell</h2>
+        <p>Bail actif · Loyer mensuel : <strong>2 495,00 $</strong></p>
+      </div>
+
+      <article class="month-card">
+        <div>
+          <span>Mois suivi</span>
+          <strong id="currentMonthLabel">Août 2026</strong>
+        </div>
+        <p>Le loyer, le mortgage et le strata affichés ci-dessous concernent tous ce même mois.</p>
+      </article>
+
+      <article class="panel">
+        <div class="panel-title">
+          <div>
+            <h3>Loyer des locataires</h3>
+            <p>Ce paiement est totalement séparé des rappels du propriétaire.</p>
+          </div>
+          <span id="rentStatus" class="status warning">En attente</span>
+        </div>
+
+        <div class="rent-amount">
+          <span>Montant attendu</span>
+          <strong>2 495,00 $</strong>
+        </div>
+
+        <div class="deposit-note">
+          <strong>Caution de juillet 2026 déjà reçue</strong>
+          <span>2 495,00 $ · Interac · Rylie Matson · Réf. CA6xybwp · 1er juillet 2026</span>
+          <small>Message : Damage and Pet deposit</small>
+        </div>
+
+        <form id="interacForm" class="upload-form">
+          <label>Preuve Interac
+            <input id="interacFile" type="file" accept="image/*,.pdf">
+          </label>
+          <div class="form-grid">
+            <label>Référence Interac
+              <input id="interacReference" placeholder="Ex. CA6xybwp" required>
+            </label>
+            <label>Date de réception
+              <input id="interacDate" type="date" required>
+            </label>
+            <label>Expéditeur
+              <input id="interacSender" value="Rylie Matson" required>
+            </label>
+            <label>Montant reçu
+              <input id="interacAmount" value="2 495,00 $" required>
+            </label>
+          </div>
+          <button class="primary-button" type="submit">Valider le loyer reçu</button>
+        </form>
+        <div id="interacResult" class="saved-items"></div>
+      </article>
+
+      <article class="panel reminder-panel">
+        <div class="panel-title">
+          <div>
+            <h3>⚠️ Rappels du propriétaire</h3>
+            <p>À vérifier le 1er de chaque mois. Aucun de ces montants n’est additionné au loyer.</p>
+          </div>
+        </div>
+
+        <div class="reminder-row">
+          <div>
+            <span class="reminder-name">Mortgage RBC</span>
+            <strong>2 318,53 $</strong>
+            <small>Échéance : 1er du mois en cours</small>
+          </div>
+          <label class="check-control">
+            <input id="mortgagePaid" type="checkbox">
+            <span id="mortgageLabel">Non payé</span>
+          </label>
+        </div>
+
+        <div class="reminder-row">
+          <div>
+            <span class="reminder-name">Strata</span>
+            <strong>417,29 $</strong>
+            <small>Échéance : 1er du mois en cours</small>
+          </div>
+          <label class="check-control">
+            <input id="strataPaid" type="checkbox">
+            <span id="strataLabel">Non payé</span>
+          </label>
+        </div>
+
+        <div class="important-note">
+          Ces rappels servent uniquement à confirmer « oui » ou « non » pour le mois affiché. Ils ne modifient jamais le montant du loyer.
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-title">
+          <div>
+            <h3>Historique mensuel Langley</h3>
+            <p>Un résumé du loyer et des deux rappels pour chaque mois.</p>
+          </div>
+          <button id="saveMonthButton" class="secondary-button" type="button">Enregistrer le mois</button>
+        </div>
+        <div id="langleyHistory" class="history-list"></div>
+      </article>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
