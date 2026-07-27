@@ -1,295 +1,374 @@
 <!doctype html>
 <html lang="fr-CA">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0f766e">
-  <meta name="description" content="Application privée de suivi des loyers Okala et Langley.">
-  <title>Gestion des loyers — Okala & Langley</title>
-  <link rel="stylesheet" href="styles.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<title>Gestion des loyers — Okala & Langley</title>
+<style>
+:root{
+  --bg:#eef6f5;--surface:#fff;--primary:#0f766e;--primary2:#14b8a6;
+  --text:#102321;--muted:#667b78;--line:#dce9e7;
+  --success-bg:#dcfce7;--success:#166534;
+  --warning-bg:#fff7ed;--warning:#9a3412;
+  --shadow:0 18px 45px rgba(15,118,110,.12);--radius:24px
+}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--text);background:var(--bg)}
+button,input{font:inherit}
+button{cursor:pointer}
+.app{width:min(920px,100%);margin:auto;padding:22px 16px 50px}
+.topbar{display:flex;align-items:center;gap:14px;margin-bottom:22px}
+.topbar>div{flex:1}
+.topbar h1{margin:2px 0 0;font-size:clamp(1.7rem,5vw,2.4rem)}
+.eyebrow{margin:0;color:var(--primary);font-weight:850;font-size:.76rem;letter-spacing:.1em;text-transform:uppercase}
+.icon-btn{width:46px;height:46px;border:0;border-radius:50%;background:#fff;color:var(--primary);box-shadow:var(--shadow);font-size:1.35rem;font-weight:800}
+.hidden{visibility:hidden}
+.view{display:none}
+.view.active{display:block}
+.hero,.profile,.month-card{padding:26px;border-radius:30px;background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;box-shadow:var(--shadow)}
+.hero h2,.profile h2{font-size:clamp(1.8rem,6vw,2.8rem);margin:0 0 10px}
+.hero p,.profile p{margin:0;line-height:1.55}
+.cards,.units{display:grid;gap:18px;margin-top:22px}
+.property-card{
+  min-height:116px;border:0;border-radius:var(--radius);padding:22px;
+  display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:18px;
+  color:#fff;background:linear-gradient(135deg,var(--primary),var(--primary2));
+  box-shadow:var(--shadow);text-align:left
+}
+.property-icon,.unit-icon{width:68px;height:68px;display:grid;place-items:center;border-radius:20px;background:rgba(255,255,255,.18);font-size:2rem}
+.property-name{font-size:1.8rem;font-weight:900}
+.chevron{font-size:2.5rem}
+.unit-card{
+  border:0;background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;
+  display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;text-align:left;color:var(--text)
+}
+.unit-card strong,.unit-card small{display:block}
+.unit-card small{margin-top:5px;color:var(--muted)}
+.unit-icon{background:#e4f7f4;font-size:1.8rem}
+.status{display:inline-flex;border-radius:999px;padding:7px 11px;font-weight:800;font-size:.78rem;white-space:nowrap}
+.success{background:var(--success-bg);color:var(--success)}
+.warning{background:var(--warning-bg);color:var(--warning)}
+.panel{margin-top:20px;background:#fff;border-radius:var(--radius);padding:22px;box-shadow:var(--shadow)}
+.panel h3{margin:0 0 8px}
+.panel p{line-height:1.55}
+.summary-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:20px}
+.summary{padding:20px;background:#fff;border-radius:20px;box-shadow:var(--shadow)}
+.summary span,.summary strong{display:block}.summary span{color:var(--muted)}.summary strong{margin-top:8px;font-size:1.35rem}
+.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;min-width:650px}
+th,td{text-align:left;padding:12px;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-size:.82rem}
+.month-card{margin-top:18px;display:flex;justify-content:space-between;align-items:center;gap:18px}
+.month-card span,.month-card strong{display:block}.month-card strong{font-size:1.8rem;margin-top:5px}
+.month-card p{margin:0;text-align:right;max-width:430px}
+.panel-title{display:flex;justify-content:space-between;align-items:flex-start;gap:15px}
+.panel-title p{margin:0;color:var(--muted)}
+.rent-amount{padding:18px 0}.rent-amount span,.rent-amount strong{display:block}.rent-amount strong{font-size:2rem;margin-top:4px}
+.note{padding:16px;border-radius:17px;background:#f0fdfa;border:1px solid var(--line);display:grid;gap:5px}
+.form{display:grid;gap:14px;margin-top:18px}
+.form label{display:grid;gap:7px;color:var(--muted);font-weight:700}
+.form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+input{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:14px}
+.primary,.secondary{border:0;border-radius:15px;padding:13px 17px;font-weight:850}
+.primary{background:var(--primary);color:#fff}.secondary{background:#e4f7f4;color:var(--primary)}
+.reminder{display:flex;justify-content:space-between;align-items:center;gap:18px;border:1px solid var(--line);border-radius:18px;padding:18px;margin-top:14px}
+.reminder span,.reminder strong,.reminder small{display:block}.reminder strong{font-size:1.45rem;margin:4px 0}.reminder small{color:var(--muted)}
+.check{display:flex;align-items:center;gap:9px;padding:9px 13px;border-radius:999px;background:var(--warning-bg);color:var(--warning);font-weight:850}
+.check.checked{background:var(--success-bg);color:var(--success)}
+.check input{width:21px;height:21px}
+.saved{margin-top:14px;display:grid;gap:10px}
+.saved>div{padding:14px;background:#f7fbfa;border:1px solid var(--line);border-radius:16px}
+.history{display:grid;gap:12px;margin-top:16px}
+.history-row{border:1px solid var(--line);border-radius:17px;padding:16px;display:grid;grid-template-columns:1fr repeat(3,auto);gap:10px;align-items:center}
+.pill{font-size:.76rem;font-weight:850;padding:7px 9px;border-radius:999px}
+.toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,120px);opacity:0;transition:.25s;background:#102321;color:white;padding:12px 18px;border-radius:999px}
+.toast.show{transform:translate(-50%,0);opacity:1}
+@media(max-width:680px){
+  .summary-grid,.form-grid{grid-template-columns:1fr}
+  .month-card,.panel-title,.reminder{flex-direction:column;align-items:flex-start}
+  .month-card p{text-align:left}
+  .history-row{grid-template-columns:1fr 1fr}.history-row strong{grid-column:1/-1}
+}
+</style>
 </head>
 <body>
-  <main class="app-shell">
-    <header class="topbar">
-      <button id="backButton" class="icon-button hidden" type="button" aria-label="Retour">←</button>
-      <div>
-        <p class="eyebrow">Gestion des loyers</p>
-        <h1 id="pageTitle">Bonjour Edan 👋</h1>
+<main class="app">
+  <header class="topbar">
+    <button id="backBtn" class="icon-btn hidden" type="button">←</button>
+    <div>
+      <p class="eyebrow">Gestion des loyers</p>
+      <h1 id="title">Bonjour Edan 👋</h1>
+    </div>
+    <button id="resetBtn" class="icon-btn" type="button">↻</button>
+  </header>
+
+  <section id="home" class="view active">
+    <div class="hero">
+      <h2>Choisis une propriété</h2>
+      <p>Chaque logement possède son propre suivi.</p>
+    </div>
+    <div class="cards">
+      <button class="property-card nav" data-target="okala" type="button">
+        <span class="property-icon">🏘️</span><span class="property-name">OKALA</span><span class="chevron">›</span>
+      </button>
+      <button class="property-card nav" data-target="langley" type="button">
+        <span class="property-icon">🏢</span><span class="property-name">LANGLEY</span><span class="chevron">›</span>
+      </button>
+    </div>
+  </section>
+
+  <section id="okala" class="view">
+    <div class="profile"><p class="eyebrow" style="color:white">Gabon</p><h2>OKALA</h2><p>Deux studios suivis séparément.</p></div>
+    <div class="units">
+      <button class="unit-card nav" data-target="sandrine" type="button">
+        <span class="unit-icon">🏠</span><span><strong>Studio 1</strong><small>Sandrine Boutoto Pandza</small></span><span class="status success">À jour</span>
+      </button>
+      <button class="unit-card nav" data-target="nelly" type="button">
+        <span class="unit-icon">🏠</span><span><strong>Studio 2</strong><small>Nelly Loriane Engong Ngomo</small></span><span class="status warning">Reliquat 100 000 FCFA</span>
+      </button>
+    </div>
+  </section>
+
+  <section id="sandrine" class="view">
+    <div class="profile"><p class="eyebrow" style="color:white">OKALA — Studio 1</p><h2>Sandrine Boutoto Pandza</h2><p>Paiement entre le 16 et le 19 du mois.</p></div>
+    <div class="summary-grid">
+      <div class="summary"><span>Total dû</span><strong>960 000 FCFA</strong></div>
+      <div class="summary"><span>Total payé</span><strong>960 000 FCFA</strong></div>
+    </div>
+    <div class="panel"><h3>Paiements enregistrés</h3><div class="table-wrap"><table>
+      <thead><tr><th>Mois</th><th>Date</th><th>Réf. UGB</th><th>Montant</th><th>Statut</th></tr></thead>
+      <tbody>
+        <tr><td>Mai 2026</td><td>19 mai</td><td>169486</td><td>320 000 FCFA</td><td><span class="status success">Payé</span></td></tr>
+        <tr><td>Juin 2026</td><td>16 juin</td><td>170608</td><td>320 000 FCFA</td><td><span class="status success">Payé</span></td></tr>
+        <tr><td>Juillet 2026</td><td>17 juillet</td><td>172355</td><td>320 000 FCFA</td><td><span class="status success">Payé</span></td></tr>
+      </tbody>
+    </table></div></div>
+  </section>
+
+  <section id="nelly" class="view">
+    <div class="profile"><p class="eyebrow" style="color:white">OKALA — Studio 2</p><h2>Nelly Loriane Engong Ngomo</h2><p>Paiement entre le 1er et le 5 du mois suivant.</p></div>
+    <div class="summary-grid">
+      <div class="summary"><span>Reliquat actuel</span><strong>100 000 FCFA</strong></div>
+      <div class="summary"><span>Origine</span><strong>Avril + mai</strong></div>
+    </div>
+    <div class="panel"><h3>Historique informatif</h3><p>Dette historique : <strong>800 000 FCFA</strong>. Cette information ne rentre pas dans le calcul du reliquat actuel.</p><div class="note"><span>Ancien loyer : 100 000 FCFA</span><span>Nouveau loyer depuis avril : 150 000 FCFA</span><span>Écart restant : 50 000 FCFA en avril + 50 000 FCFA en mai</span></div></div>
+  </section>
+
+  <section id="langley" class="view">
+    <div class="profile"><p class="eyebrow" style="color:white">Canada — Condo B317</p><h2>Rylie Matson &amp; Dustin Hurrell</h2><p>Bail actif · Loyer mensuel : <strong>2 495,00 $</strong></p></div>
+
+    <div class="month-card">
+      <div><span>Mois suivi</span><strong>Août 2026</strong></div>
+      <p>Le loyer et les rappels ci-dessous concernent le même mois.</p>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">
+        <div><h3>Loyer des locataires</h3><p>Le loyer reste séparé du mortgage et du strata.</p></div>
+        <span id="rentStatus" class="status warning">En attente</span>
       </div>
-      <button id="resetDemoButton" class="icon-button" type="button" aria-label="Réinitialiser la démonstration">↻</button>
-    </header>
-
-    <section id="homeView" class="view active">
-      <div class="welcome-card">
-        <h2>Choisis une propriété</h2>
-        <p>Les loyers, reçus et rappels sont classés séparément par logement.</p>
+      <div class="rent-amount"><span>Montant attendu</span><strong>2 495,00 $</strong></div>
+      <div class="note">
+        <strong>Caution de juillet 2026 déjà reçue</strong>
+        <span>2 495,00 $ · Interac · Rylie Matson</span>
+        <span>Réf. CA6xybwp · 1er juillet 2026</span>
+        <small>Message : Damage and Pet deposit</small>
       </div>
+      <form id="interacForm" class="form">
+        <label>Preuve Interac<input id="proof" type="file" accept="image/*,.pdf"></label>
+        <div class="form-grid">
+          <label>Référence Interac<input id="reference" placeholder="Ex. CA6xybwp" required></label>
+          <label>Date de réception<input id="date" type="date" required></label>
+          <label>Expéditeur<input id="sender" value="Rylie Matson" required></label>
+          <label>Montant reçu<input id="amount" value="2 495,00 $" required></label>
+        </div>
+        <button class="primary" type="submit">Valider le loyer reçu</button>
+      </form>
+      <div id="interacResult" class="saved"></div>
+    </div>
 
-      <div class="property-list">
-        <button class="property-card" type="button" data-route="okala">
-          <span class="property-icon">🏘️</span>
-          <span class="property-name">OKALA</span>
-          <span class="chevron">›</span>
-        </button>
-
-        <button class="property-card" type="button" data-route="langley">
-          <span class="property-icon">🏢</span>
-          <span class="property-name">LANGLEY</span>
-          <span class="chevron">›</span>
-        </button>
+    <div class="panel">
+      <div class="panel-title"><div><h3>⚠️ Rappels du propriétaire</h3><p>À vérifier le 1er du mois. Ces montants ne sont jamais additionnés au loyer.</p></div></div>
+      <div class="reminder">
+        <div><span>Mortgage RBC</span><strong>2 318,53 $</strong><small>Échéance : 1er août 2026</small></div>
+        <label id="mortgageWrap" class="check"><input id="mortgage" type="checkbox"><span id="mortgageText">Non payé</span></label>
       </div>
-    </section>
-
-    <section id="okalaView" class="view">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">Gabon</p>
-          <h2>OKALA</h2>
-          <p>Deux studios suivis séparément.</p>
-        </div>
+      <div class="reminder">
+        <div><span>Strata</span><strong>417,29 $</strong><small>Échéance : 1er août 2026</small></div>
+        <label id="strataWrap" class="check"><input id="strata" type="checkbox"><span id="strataText">Non payé</span></label>
       </div>
+      <div class="note" style="margin-top:15px">Ces deux cases répondent seulement à la question : « Avons-nous payé ce mois-ci ? »</div>
+    </div>
 
-      <div class="unit-list">
-        <button class="unit-card" type="button" data-route="sandrine">
-          <span class="unit-icon">🏠</span>
-          <span>
-            <strong>Studio 1</strong>
-            <small>Sandrine Boutoto Pandza</small>
-          </span>
-          <span class="status success">À jour</span>
-          <span class="chevron">›</span>
-        </button>
+    <div class="panel">
+      <div class="panel-title"><div><h3>Historique mensuel</h3><p>Résumé du loyer, du mortgage et du strata.</p></div><button id="saveMonth" class="secondary" type="button">Enregistrer le mois</button></div>
+      <div id="history" class="history"></div>
+    </div>
+  </section>
+</main>
 
-        <button class="unit-card" type="button" data-route="nelly">
-          <span class="unit-icon">🏠</span>
-          <span>
-            <strong>Studio 2</strong>
-            <small>Nelly Loriane Engong Ngomo</small>
-          </span>
-          <span class="status warning">Reliquat 100 000 FCFA</span>
-          <span class="chevron">›</span>
-        </button>
-      </div>
-    </section>
+<div id="toast" class="toast"></div>
 
-    <section id="sandrineView" class="view">
-      <div class="profile-card">
-        <p class="eyebrow">OKALA — Studio 1</p>
-        <h2>Sandrine Boutoto Pandza</h2>
-        <p>Paiement mensuel prévu entre le 16 et le 19 du mois.</p>
-      </div>
+<script>
+(function(){
+  "use strict";
 
-      <div class="summary-grid">
-        <article class="summary-card">
-          <span>Total dû</span>
-          <strong>960 000 FCFA</strong>
-        </article>
-        <article class="summary-card">
-          <span>Total payé</span>
-          <strong>960 000 FCFA</strong>
-        </article>
-      </div>
+  var STORAGE_KEY = "gestionLoyersV11";
+  var current = "home";
+  var parents = {okala:"home",sandrine:"okala",nelly:"okala",langley:"home"};
+  var titles = {home:"Bonjour Edan 👋",okala:"OKALA",sandrine:"Sandrine",nelly:"Nelly",langley:"LANGLEY — B317"};
 
-      <article class="panel">
-        <div class="panel-title">
-          <div>
-            <h3>Paiements enregistrés</h3>
-            <p>Les bordereaux UGB restent uniquement dans le dossier de Sandrine.</p>
-          </div>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr><th>Mois</th><th>Date</th><th>Référence UGB</th><th>Montant</th><th>Statut</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>Mai 2026</td><td>19 mai 2026</td><td>169486</td><td>320 000 FCFA</td><td><span class="status success">Payé</span></td></tr>
-              <tr><td>Juin 2026</td><td>16 juin 2026</td><td>170608</td><td>320 000 FCFA</td><td><span class="status success">Payé</span></td></tr>
-              <tr><td>Juillet 2026</td><td>17 juillet 2026</td><td>172355</td><td>320 000 FCFA</td><td><span class="status success">Payé</span></td></tr>
-            </tbody>
-          </table>
-        </div>
-      </article>
+  function freshState(){
+    return {
+      rent:{paid:false,reference:"",date:"",sender:"Rylie Matson",amount:"2 495,00 $",fileName:""},
+      mortgage:false,
+      strata:false,
+      history:[]
+    };
+  }
 
-      <article class="panel">
-        <h3>Ajouter un bordereau UGB</h3>
-        <p class="muted">La version GitHub enregistre localement la référence et le montant saisis après vérification.</p>
-        <form class="upload-form" data-form="ugb-sandrine">
-          <label>Image du bordereau
-            <input type="file" accept="image/*,.pdf">
-          </label>
-          <div class="form-grid">
-            <label>Référence UGB
-              <input name="reference" inputmode="numeric" placeholder="Ex. 172355" required>
-            </label>
-            <label>Montant
-              <input name="amount" placeholder="Ex. 320 000 FCFA" required>
-            </label>
-          </div>
-          <button class="primary-button" type="submit">Enregistrer dans le dossier Sandrine</button>
-        </form>
-        <div class="saved-items" id="sandrineUploads"></div>
-      </article>
-    </section>
+  function load(){
+    try{
+      var saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? JSON.parse(saved) : freshState();
+    }catch(e){
+      return freshState();
+    }
+  }
 
-    <section id="nellyView" class="view">
-      <div class="profile-card">
-        <p class="eyebrow">OKALA — Studio 2</p>
-        <h2>Nelly Loriane Engong Ngomo</h2>
-        <p>Paiement du loyer entre le 1er et le 5 du mois suivant.</p>
-      </div>
+  var state = load();
 
-      <div class="summary-grid">
-        <article class="summary-card accent">
-          <span>Reliquat actuel</span>
-          <strong>100 000 FCFA</strong>
-        </article>
-        <article class="summary-card">
-          <span>Origine du reliquat</span>
-          <strong>Avril + mai</strong>
-        </article>
-      </div>
+  function save(){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+  }
 
-      <article class="panel">
-        <h3>Historique informatif</h3>
-        <p>Dette historique mentionnée : <strong>800 000 FCFA</strong>. Cette information reste visible, mais elle n’entre pas dans le calcul du reliquat actuel.</p>
-        <div class="history-note">
-          <p>Ancien loyer : 100 000 FCFA.</p>
-          <p>Nouveau loyer depuis avril : 150 000 FCFA.</p>
-          <p>Écart restant : 50 000 FCFA pour avril + 50 000 FCFA pour mai.</p>
-        </div>
-      </article>
+  function go(target){
+    var views = document.querySelectorAll(".view");
+    for(var i=0;i<views.length;i++) views[i].classList.remove("active");
+    var view = document.getElementById(target);
+    if(!view) return;
+    view.classList.add("active");
+    current = target;
+    document.getElementById("title").textContent = titles[target] || "Gestion des loyers";
+    document.getElementById("backBtn").classList.toggle("hidden", target==="home");
+    window.scrollTo(0,0);
+  }
 
-      <article class="panel">
-        <h3>Ajouter un bordereau UGB</h3>
-        <form class="upload-form" data-form="ugb-nelly">
-          <label>Image du bordereau
-            <input type="file" accept="image/*,.pdf">
-          </label>
-          <div class="form-grid">
-            <label>Référence UGB
-              <input name="reference" placeholder="Numéro du bordereau" required>
-            </label>
-            <label>Montant
-              <input name="amount" placeholder="Montant en FCFA" required>
-            </label>
-          </div>
-          <button class="primary-button" type="submit">Enregistrer dans le dossier Nelly</button>
-        </form>
-        <div class="saved-items" id="nellyUploads"></div>
-      </article>
-    </section>
+  var navs = document.querySelectorAll(".nav");
+  for(var i=0;i<navs.length;i++){
+    navs[i].addEventListener("click", function(){
+      go(this.getAttribute("data-target"));
+    });
+  }
 
-    <section id="langleyView" class="view">
-      <div class="profile-card langley-hero">
-        <p class="eyebrow">Canada — Condo B317</p>
-        <h2>Rylie Matson &amp; Dustin Hurrell</h2>
-        <p>Bail actif · Loyer mensuel : <strong>2 495,00 $</strong></p>
-      </div>
+  document.getElementById("backBtn").addEventListener("click", function(){
+    go(parents[current] || "home");
+  });
 
-      <article class="month-card">
-        <div>
-          <span>Mois suivi</span>
-          <strong id="currentMonthLabel">Août 2026</strong>
-        </div>
-        <p>Le loyer, le mortgage et le strata affichés ci-dessous concernent tous ce même mois.</p>
-      </article>
+  function toast(msg){
+    var t=document.getElementById("toast");
+    t.textContent=msg;
+    t.classList.add("show");
+    setTimeout(function(){t.classList.remove("show");},2000);
+  }
 
-      <article class="panel">
-        <div class="panel-title">
-          <div>
-            <h3>Loyer des locataires</h3>
-            <p>Ce paiement est totalement séparé des rappels du propriétaire.</p>
-          </div>
-          <span id="rentStatus" class="status warning">En attente</span>
-        </div>
+  document.getElementById("resetBtn").addEventListener("click", function(){
+    if(!confirm("Réinitialiser les données enregistrées sur cet appareil ?")) return;
+    state=freshState();
+    save();
+    render();
+    go("home");
+    toast("Démonstration réinitialisée");
+  });
 
-        <div class="rent-amount">
-          <span>Montant attendu</span>
-          <strong>2 495,00 $</strong>
-        </div>
+  document.getElementById("interacForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    var file=document.getElementById("proof").files[0];
+    state.rent={
+      paid:true,
+      reference:document.getElementById("reference").value.trim(),
+      date:document.getElementById("date").value,
+      sender:document.getElementById("sender").value.trim(),
+      amount:document.getElementById("amount").value.trim(),
+      fileName:file ? file.name : "Aucune preuve jointe"
+    };
+    save(); render(); toast("Loyer Interac validé");
+  });
 
-        <div class="deposit-note">
-          <strong>Caution de juillet 2026 déjà reçue</strong>
-          <span>2 495,00 $ · Interac · Rylie Matson · Réf. CA6xybwp · 1er juillet 2026</span>
-          <small>Message : Damage and Pet deposit</small>
-        </div>
+  document.getElementById("mortgage").addEventListener("change", function(){
+    state.mortgage=this.checked;save();render();
+  });
+  document.getElementById("strata").addEventListener("change", function(){
+    state.strata=this.checked;save();render();
+  });
 
-        <form id="interacForm" class="upload-form">
-          <label>Preuve Interac
-            <input id="interacFile" type="file" accept="image/*,.pdf">
-          </label>
-          <div class="form-grid">
-            <label>Référence Interac
-              <input id="interacReference" placeholder="Ex. CA6xybwp" required>
-            </label>
-            <label>Date de réception
-              <input id="interacDate" type="date" required>
-            </label>
-            <label>Expéditeur
-              <input id="interacSender" value="Rylie Matson" required>
-            </label>
-            <label>Montant reçu
-              <input id="interacAmount" value="2 495,00 $" required>
-            </label>
-          </div>
-          <button class="primary-button" type="submit">Valider le loyer reçu</button>
-        </form>
-        <div id="interacResult" class="saved-items"></div>
-      </article>
+  document.getElementById("saveMonth").addEventListener("click", function(){
+    var entry={
+      month:"Août 2026",
+      rentPaid:state.rent.paid,
+      mortgagePaid:state.mortgage,
+      strataPaid:state.strata,
+      reference:state.rent.reference || ""
+    };
+    var found=-1;
+    for(var i=0;i<state.history.length;i++){
+      if(state.history[i].month===entry.month){found=i;break;}
+    }
+    if(found>=0) state.history[found]=entry;
+    else state.history.unshift(entry);
+    save();renderHistory();toast("Mois enregistré");
+  });
 
-      <article class="panel reminder-panel">
-        <div class="panel-title">
-          <div>
-            <h3>⚠️ Rappels du propriétaire</h3>
-            <p>À vérifier le 1er de chaque mois. Aucun de ces montants n’est additionné au loyer.</p>
-          </div>
-        </div>
+  function esc(v){
+    return String(v).replace(/[&<>"']/g,function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c];
+    });
+  }
 
-        <div class="reminder-row">
-          <div>
-            <span class="reminder-name">Mortgage RBC</span>
-            <strong>2 318,53 $</strong>
-            <small>Échéance : 1er du mois en cours</small>
-          </div>
-          <label class="check-control">
-            <input id="mortgagePaid" type="checkbox">
-            <span id="mortgageLabel">Non payé</span>
-          </label>
-        </div>
+  function render(){
+    var rentStatus=document.getElementById("rentStatus");
+    rentStatus.textContent=state.rent.paid ? "Payé par Interac" : "En attente";
+    rentStatus.className="status "+(state.rent.paid ? "success" : "warning");
 
-        <div class="reminder-row">
-          <div>
-            <span class="reminder-name">Strata</span>
-            <strong>417,29 $</strong>
-            <small>Échéance : 1er du mois en cours</small>
-          </div>
-          <label class="check-control">
-            <input id="strataPaid" type="checkbox">
-            <span id="strataLabel">Non payé</span>
-          </label>
-        </div>
+    document.getElementById("mortgage").checked=state.mortgage;
+    document.getElementById("strata").checked=state.strata;
+    document.getElementById("mortgageText").textContent=state.mortgage ? "Oui, payé" : "Non payé";
+    document.getElementById("strataText").textContent=state.strata ? "Oui, payé" : "Non payé";
+    document.getElementById("mortgageWrap").classList.toggle("checked",state.mortgage);
+    document.getElementById("strataWrap").classList.toggle("checked",state.strata);
 
-        <div class="important-note">
-          Ces rappels servent uniquement à confirmer « oui » ou « non » pour le mois affiché. Ils ne modifient jamais le montant du loyer.
-        </div>
-      </article>
+    var result=document.getElementById("interacResult");
+    if(state.rent.paid){
+      result.innerHTML='<div><strong>✓ Interac reçu — '+esc(state.rent.amount)+'</strong><br>'+
+        'Expéditeur : '+esc(state.rent.sender)+'<br>'+
+        'Date : '+esc(state.rent.date)+'<br>'+
+        'Référence : '+esc(state.rent.reference)+'<br>'+
+        'Preuve : '+esc(state.rent.fileName)+'</div>';
+    }else result.innerHTML="";
+    renderHistory();
+  }
 
-      <article class="panel">
-        <div class="panel-title">
-          <div>
-            <h3>Historique mensuel Langley</h3>
-            <p>Un résumé du loyer et des deux rappels pour chaque mois.</p>
-          </div>
-          <button id="saveMonthButton" class="secondary-button" type="button">Enregistrer le mois</button>
-        </div>
-        <div id="langleyHistory" class="history-list"></div>
-      </article>
-    </section>
-  </main>
+  function renderHistory(){
+    var box=document.getElementById("history");
+    if(!state.history.length){
+      box.innerHTML='<p style="color:var(--muted)">Aucun mois archivé pour le moment.</p>';
+      return;
+    }
+    var out="";
+    for(var i=0;i<state.history.length;i++){
+      var e=state.history[i];
+      out+='<div class="history-row"><strong>'+esc(e.month)+(e.reference?' · Réf. '+esc(e.reference):'')+'</strong>'+
+        '<span class="pill '+(e.rentPaid?'success':'warning')+'">Loyer '+(e.rentPaid?'reçu':'en attente')+'</span>'+
+        '<span class="pill '+(e.mortgagePaid?'success':'warning')+'">Mortgage '+(e.mortgagePaid?'payé':'non payé')+'</span>'+
+        '<span class="pill '+(e.strataPaid?'success':'warning')+'">Strata '+(e.strataPaid?'payé':'non payé')+'</span></div>';
+    }
+    box.innerHTML=out;
+  }
 
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
-
-  <script src="app.js"></script>
+  render();
+  go("home");
+})();
+</script>
 </body>
 </html>
