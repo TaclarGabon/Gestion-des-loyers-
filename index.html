@@ -482,18 +482,80 @@ th{color:#e9b888}.download-card{display:flex;justify-content:space-between;align
     });
   }
 
-  async function recognizeReferenceZone(worker,file){
-    var img=await loadImageFile(file);
+  function cropUgbZone(img, zone, scale, contrast){
     var canvas=document.createElement("canvas");
-    /* Zone supérieure droite du modèle UGB : numéro et date du bordereau. */
-    var sx=Math.round(img.naturalWidth*0.60), sy=Math.round(img.naturalHeight*0.04);
-    var sw=Math.round(img.naturalWidth*0.36), sh=Math.round(img.naturalHeight*0.20);
-    canvas.width=sw*3; canvas.height=sh*3;
+    var sx=Math.round(img.naturalWidth*zone.x);
+    var sy=Math.round(img.naturalHeight*zone.y);
+    var sw=Math.round(img.naturalWidth*zone.w);
+    var sh=Math.round(img.naturalHeight*zone.h);
+    canvas.width=Math.max(1,sw*(scale||4));
+    canvas.height=Math.max(1,sh*(scale||4));
     var ctx=canvas.getContext("2d");
-    ctx.filter="grayscale(1) contrast(1.8)";
+    ctx.imageSmoothingEnabled=true;
+    ctx.filter="grayscale(1) contrast("+(contrast||2.1)+")";
     ctx.drawImage(img,sx,sy,sw,sh,0,0,canvas.width,canvas.height);
-    var zone=await worker.recognize(canvas,{rectangle:{left:0,top:0,width:canvas.width,height:canvas.height}});
-    return zone.data.text||"";
+    return canvas;
+  }
+
+  async function recognizeZone(worker,canvas,whitelist,psm){
+    try{
+      await worker.setParameters({
+        tessedit_char_whitelist:whitelist||"",
+        tessedit_pageseg_mode:String(psm||7),
+        preserve_interword_spaces:"1"
+      });
+      var result=await worker.recognize(canvas);
+      return (result.data.text||"").trim();
+    }catch(e){console.warn(e);return "";}
+  }
+
+  function digitsOnly(text){return String(text||"").replace(/\D/g,"");}
+
+  function parseTargetReference(text){
+    var d=digitsOnly(text);
+    if(d.length>7) d=d.slice(-6);
+    return d.length>=5&&d.length<=7?d:"";
+  }
+
+  function parseTargetDate(text){
+    var normalized=String(text||"").replace(/[|Il]/g,"1").replace(/[Oo]/g,"0");
+    var m=normalized.match(/(\d{1,2})\D+(\d{1,2})\D+(20\d{2})/);
+    if(m){return m[3]+"-"+pad2(m[2])+"-"+pad2(m[1]);}
+    return parseFrenchDate(normalized);
+  }
+
+  function parseTargetAmount(text){
+    var values=String(text||"").match(/\d[\d\s.,]{3,}/g)||[];
+    for(var i=0;i<values.length;i++){
+      var n=parseInt(values[i].replace(/\D/g,""),10);
+      if(n>=10000&&n<=5000000) return n;
+    }
+    return null;
+  }
+
+  async function recognizeUgbFixedZones(worker,file){
+    var img=await loadImageFile(file);
+    /* Coordonnées relatives au modèle UGB, avec le document entier cadré de face. */
+    var referenceCanvas=cropUgbZone(img,{x:0.70,y:0.045,w:0.275,h:0.085},5,2.4);
+    var dateCanvas=cropUgbZone(img,{x:0.66,y:0.105,w:0.32,h:0.095},5,2.2);
+    var netAmountCanvas=cropUgbZone(img,{x:0.56,y:0.50,w:0.28,h:0.145},5,2.4);
+    var depositAmountCanvas=cropUgbZone(img,{x:0.47,y:0.245,w:0.30,h:0.105},5,2.3);
+
+    var referenceText=await recognizeZone(worker,referenceCanvas,"0123456789",7);
+    var dateText=await recognizeZone(worker,dateCanvas,"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZéèûùàâôîïÉÈÛÙÀÂÔÎÏ /:-",7);
+    var netAmountText=await recognizeZone(worker,netAmountCanvas,"0123456789 XAFcfCaF.",6);
+    var depositAmountText="";
+    var amount=parseTargetAmount(netAmountText);
+    if(!amount){
+      depositAmountText=await recognizeZone(worker,depositAmountCanvas,"0123456789 XAFcfCaF.",6);
+      amount=parseTargetAmount(depositAmountText);
+    }
+    return {
+      reference:parseTargetReference(referenceText),
+      date:parseTargetDate(dateText),
+      amount:amount,
+      debug:{referenceText:referenceText,dateText:dateText,netAmountText:netAmountText,depositAmountText:depositAmountText}
+    };
   }
 
   async function readUgbProof(person){
@@ -512,12 +574,10 @@ th{color:#e9b888}.download-card{display:flex;justify-content:space-between;align
       var worker=await Tesseract.createWorker("fra",1,{logger:function(m){
         if(m.status==="recognizing text") setOcrStatus(person,"Lecture : "+Math.round((m.progress||0)*100)+" %","working");
       }});
-      var result=await worker.recognize(file);
-      setOcrStatus(person,"Lecture ciblée du numéro de bordereau…","working");
-      var referenceZoneText="";
-      try{referenceZoneText=await recognizeReferenceZone(worker,file);}catch(zoneError){console.warn(zoneError);}
+      setOcrStatus(person,"Lecture des trois zones UGB : numéro, date et montant net…","working");
+      var parsed=await recognizeUgbFixedZones(worker,file);
+      console.log("Lecture UGB ciblée",parsed.debug);
       await worker.terminate();
-      var parsed=parseOcrText(result.data.text,referenceZoneText);
       if(parsed.date) document.getElementById(person+"Date").value=parsed.date;
       if(parsed.reference) document.getElementById(person+"Reference").value=parsed.reference;
       if(parsed.amount) document.getElementById(person+"Amount").value=new Intl.NumberFormat("fr-FR").format(parsed.amount)+" FCFA";
