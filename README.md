@@ -1,3 +1,16 @@
-# Gestion des loyers — V1.4.3.2
+# Gestion des loyers — V1.5 Firebase
 
-Correction du téléchargement Excel : chaque locataire utilise désormais un véritable classeur à une seule feuille, conservant les données et la mise en forme du modèle validé. Le fichier Excel est généré localement sans masquer ni reconstruire les feuilles du classeur.
+Version construite à partir de la V1.4.3.2 validée.
+
+## Déploiement GitHub Pages
+Déposez à la racine du dépôt :
+- `index.html`
+- le dossier `data`
+
+## Firebase
+- Projet : `gestion-loyers-edan`
+- Authentication : adresse e-mail / mot de passe
+- Firestore : sauvegarde de l'état dans `parametres/{uid}`
+- Paiements : `loyers/{uid}/paiements/{id}`
+
+La première utilisation doit se faire avec une connexion Internet depuis GitHub Pages.

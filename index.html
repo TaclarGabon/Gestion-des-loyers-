@@ -107,15 +107,43 @@ th{color:#e9b888}.download-card{display:flex;justify-content:space-between;align
 .bank-form{margin-top:18px}.bank-history{display:grid;gap:10px;margin-top:16px}.bank-entry{padding:14px;border:1px solid var(--line);border-radius:15px;background:#191411}.bank-entry strong{color:var(--primary-2)}
 @media(max-width:680px){.download-card{flex-direction:column;align-items:flex-start}.download-link{width:100%;text-align:center}}
 
+
+.firebase-bar{display:flex;align-items:center;gap:8px;margin-top:7px;font-size:.78rem;color:var(--muted)}
+.firebase-dot{width:9px;height:9px;border-radius:50%;background:#d97706;display:inline-block}
+.firebase-dot.online{background:#22c55e}.firebase-dot.error{background:#ef4444}
+.logout-btn{border:0;background:transparent;color:var(--primary2);font-weight:800;padding:0;cursor:pointer}
+.auth-overlay{position:fixed;inset:0;z-index:9999;background:rgba(6,6,7,.96);display:grid;place-items:center;padding:20px}
+.auth-overlay.hidden-auth{display:none}
+.auth-card{width:min(440px,100%);background:#171719;border:1px solid #3b3027;border-radius:26px;padding:28px;box-shadow:var(--shadow)}
+.auth-card h2{margin:0 0 8px;font-size:2rem}.auth-card p{color:var(--muted);line-height:1.5}
+.auth-card form{display:grid;gap:13px;margin-top:20px}.auth-card input{background:#fff;color:#111}
+.auth-error{min-height:22px;color:#fca5a5;font-weight:700;font-size:.9rem}
+
 </style>
 </head>
 <body>
+
+<div id="authOverlay" class="auth-overlay">
+  <div class="auth-card">
+    <p class="eyebrow">Connexion sécurisée</p>
+    <h2>Gestion des loyers</h2>
+    <p>Connecte-toi avec le compte créé dans Firebase Authentication. Les paiements seront ensuite sauvegardés dans Firestore.</p>
+    <form id="loginForm">
+      <label>Adresse e-mail<input id="loginEmail" type="email" autocomplete="username" required></label>
+      <label>Mot de passe<input id="loginPassword" type="password" autocomplete="current-password" required></label>
+      <button id="loginButton" class="primary" type="submit">Se connecter</button>
+      <div id="authError" class="auth-error"></div>
+    </form>
+  </div>
+</div>
+
 <main class="app">
   <header class="topbar">
     <button id="backBtn" class="icon-btn hidden" type="button">←</button>
     <div>
       <p class="eyebrow">Gestion des loyers</p>
       <h1 id="title">Bonjour Edan 👋</h1>
+      <div class="firebase-bar"><span id="firebaseDot" class="firebase-dot"></span><span id="firebaseStatus">Connexion Firebase…</span><button id="logoutBtn" class="logout-btn" type="button" hidden>Déconnexion</button></div>
     </div>
     <button id="resetBtn" class="icon-btn" type="button">↻</button>
   </header>
@@ -317,6 +345,10 @@ th{color:#e9b888}.download-card{display:flex;justify-content:space-between;align
 
 <div id="toast" class="toast"></div>
 
+
+<script src="https://www.gstatic.com/firebasejs/12.16.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.16.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore-compat.js"></script>
 <script>
 /*!
 
@@ -336,8 +368,99 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 (function(){
   "use strict";
 
-  var STORAGE_KEY = "gestionLoyersV143";
-  var PREVIOUS_STORAGE_KEYS = ["gestionLoyersV141","gestionLoyersV142"];
+  var STORAGE_KEY = "gestionLoyersV143Firebase";
+  var PREVIOUS_STORAGE_KEYS = ["gestionLoyersV143","gestionLoyersV141","gestionLoyersV142"];
+  var firebaseConfig = {
+    apiKey: "AIzaSyBX_JsbwkeEKn-QmRGADwWB8YFXL8-FgGo",
+    authDomain: "gestion-loyers-edan.firebaseapp.com",
+    projectId: "gestion-loyers-edan",
+    storageBucket: "gestion-loyers-edan.firebasestorage.app",
+    messagingSenderId: "436026183117",
+    appId: "1:436026183117:web:fa01ca756c271e0cd40884"
+  };
+  var firebaseReady=false, currentFirebaseUser=null, db=null, auth=null, remoteLoading=false;
+
+  function setFirebaseStatus(message,kind){
+    var status=document.getElementById("firebaseStatus"),dot=document.getElementById("firebaseDot");
+    if(status) status.textContent=message;
+    if(dot) dot.className="firebase-dot"+(kind?" "+kind:"");
+  }
+
+  function cleanForFirestore(value){
+    return JSON.parse(JSON.stringify(value));
+  }
+
+  async function syncStateToFirebase(){
+    if(!firebaseReady || !currentFirebaseUser || !db || remoteLoading) return;
+    try{
+      await db.collection("parametres").doc(currentFirebaseUser.uid).set({
+        state:cleanForFirestore(state),
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
+        updatedBy:currentFirebaseUser.email||""
+      },{merge:true});
+      setFirebaseStatus("Sauvegardé dans Firebase","online");
+    }catch(err){
+      console.error("Synchronisation Firebase",err);
+      setFirebaseStatus("Sauvegarde Firebase impossible","error");
+    }
+  }
+
+  async function addPaymentToFirebase(type,person,entry){
+    if(!firebaseReady || !currentFirebaseUser || !db) return;
+    try{
+      await db.collection("loyers").doc(currentFirebaseUser.uid).collection("paiements").add({
+        type:type,
+        locataire:person,
+        logement:person==="sandrine"?"Okala — Studio 1":person==="nelly"?"Okala — Studio 2":"Langley — B317",
+        periode:entry.month||"",
+        datePaiement:entry.date||"",
+        reference:entry.reference||"",
+        montantVerse:entry.amount||"",
+        expéditeur:entry.sender||"",
+        preuve:entry.fileName||"",
+        createdAt:firebase.firestore.FieldValue.serverTimestamp(),
+        userId:currentFirebaseUser.uid
+      });
+    }catch(err){console.error("Ajout paiement Firebase",err);setFirebaseStatus("Paiement local, Firebase en erreur","error");}
+  }
+
+  function initFirebase(){
+    try{
+      firebase.initializeApp(firebaseConfig);
+      auth=firebase.auth(); db=firebase.firestore(); firebaseReady=true;
+      auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function(err){console.warn(err);});
+      auth.onAuthStateChanged(async function(user){
+        currentFirebaseUser=user||null;
+        var overlay=document.getElementById("authOverlay"),logout=document.getElementById("logoutBtn");
+        if(!user){
+          if(overlay) overlay.classList.remove("hidden-auth");
+          if(logout) logout.hidden=true;
+          setFirebaseStatus("Non connecté","");
+          return;
+        }
+        if(overlay) overlay.classList.add("hidden-auth");
+        if(logout) logout.hidden=false;
+        setFirebaseStatus("Connexion à Firestore…","");
+        try{
+          var snap=await db.collection("parametres").doc(user.uid).get();
+          if(snap.exists && snap.data() && snap.data().state){
+            remoteLoading=true;
+            state=snap.data().state;
+            if(!state.ugb) state.ugb={sandrine:[],nelly:[]};
+            if(!state.ugb.sandrine) state.ugb.sandrine=[];
+            if(!state.ugb.nelly) state.ugb.nelly=[];
+            localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
+            remoteLoading=false;
+            render();
+          }else{
+            await syncStateToFirebase();
+          }
+          setFirebaseStatus("Firebase connecté","online");
+        }catch(err){console.error(err);setFirebaseStatus("Firestore inaccessible","error");}
+      });
+    }catch(err){console.error("Initialisation Firebase",err);setFirebaseStatus("Firebase non chargé","error");}
+  }
+
   var current = "home";
   var parents = {okala:"home",sandrine:"okala",nelly:"okala",langley:"home"};
   var titles = {home:"Bonjour Edan 👋",okala:"OKALA",sandrine:"Sandrine",nelly:"Nelly",langley:"LANGLEY — B317"};
@@ -374,6 +497,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
   function save(){
     try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+    syncStateToFirebase();
   }
 
   function go(target){
@@ -414,6 +538,17 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     go("home");
     toast("Démonstration réinitialisée");
   });
+
+  document.getElementById("loginForm").addEventListener("submit",async function(e){
+    e.preventDefault();
+    var email=document.getElementById("loginEmail").value.trim(),password=document.getElementById("loginPassword").value;
+    var button=document.getElementById("loginButton"),error=document.getElementById("authError");
+    error.textContent="";button.disabled=true;button.textContent="Connexion…";
+    try{await auth.signInWithEmailAndPassword(email,password);document.getElementById("loginPassword").value="";}
+    catch(err){console.error(err);error.textContent="Connexion refusée. Vérifie l’adresse e-mail et le mot de passe.";}
+    finally{button.disabled=false;button.textContent="Se connecter";}
+  });
+  document.getElementById("logoutBtn").addEventListener("click",function(){if(auth)auth.signOut();});
 
 
   function setOcrStatus(person,message,kind){
@@ -818,7 +953,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         fileName:proof?proof.name:"Aucune preuve jointe"
       };
       state.ugb[person].unshift(entry);
-      save();form.reset();renderUgb(person);toast("Bordereau UGB enregistré");
+      save();addPaymentToFirebase("UGB",person,entry);form.reset();renderUgb(person);toast("Bordereau UGB enregistré et synchronisé");
     });
   }
   bindUgbForm("sandrine");
@@ -835,7 +970,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       amount:document.getElementById("amount").value.trim(),
       fileName:file ? file.name : "Aucune preuve jointe"
     };
-    save(); render(); toast("Loyer Interac validé");
+    save(); addPaymentToFirebase("Interac","riley",state.rent); render(); toast("Loyer Interac validé et synchronisé");
   });
 
   document.getElementById("mortgage").addEventListener("change", function(){
