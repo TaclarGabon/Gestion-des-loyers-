@@ -1,14 +1,8 @@
-# Gestion des loyers — V1.5.2 Firebase corrigée
+# Gestion des loyers — V1.3.8
 
-Corrections :
-- initialisation Firebase réellement exécutée au démarrage ;
-- message d’erreur Firebase précis ;
-- données communes partagées entre Edan et Otilia ;
-- conservation des fonctions Excel validées de la V1.4.3.2.
+Correction de l’accueil Firebase personnalisé.
 
-Déposer `index.html`, `README.md` et le dossier `data` sur GitHub Pages.
-
-
-## V1.5.2
-- Suppression du bloc global « Fichier Excel des loyers » de la page d’accueil.
-- Les téléchargements Excel individuels de Sandrine et Nelly restent disponibles dans leurs pages.
+- `oddou@hotmail.com` affiche **Bonjour Otilia 👋**.
+- Le prénom Firebase `displayName` reste prioritaire.
+- Les autres comptes utilisent automatiquement le prénom déduit de leur adresse e-mail si aucun `displayName` n’est enregistré.
+- Toutes les fonctions UGB, Interac et Excel de la V1.3.7 sont conservées.
