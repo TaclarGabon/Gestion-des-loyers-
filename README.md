@@ -1,8 +1,10 @@
-# Gestion des loyers — V1.3.8
+# Gestion des loyers — V1.3.10 Stable
 
-Correction de l’accueil Firebase personnalisé.
+Version reconstruite à partir de la base Firebase fonctionnelle.
 
-- `oddou@hotmail.com` affiche **Bonjour Otilia 👋**.
-- Le prénom Firebase `displayName` reste prioritaire.
-- Les autres comptes utilisent automatiquement le prénom déduit de leur adresse e-mail si aucun `displayName` n’est enregistré.
-- Toutes les fonctions UGB, Interac et Excel de la V1.3.7 sont conservées.
+Corrections ciblées :
+- accueil personnalisé selon le compte Firebase connecté ;
+- `oddou@hotmail.com` affiche **Bonjour Otilia** ;
+- le compte d’Edan affiche son prénom Firebase ou celui dérivé de son adresse ;
+- bouton **Déconnexion** distinct du bouton **Réinitialiser** ;
+- fonctions UGB, Interac, Excel et synchronisation Firebase conservées.
