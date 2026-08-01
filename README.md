@@ -1,3 +1,7 @@
+## V1.5.3.2 — correction initialisation Firebase
+
+Correction de la variable Firebase Storage qui empêchait Firebase de devenir prêt.
+
 # Gestion des loyers — V1.5.3.1
 
 Correction de la connexion Firebase :
