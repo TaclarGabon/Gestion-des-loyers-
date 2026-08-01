@@ -1,8 +1,8 @@
-## V1.5.3.2 — correction initialisation Firebase
+## V1.5.3.3 — correction initialisation Firebase
 
 Correction de la variable Firebase Storage qui empêchait Firebase de devenir prêt.
 
-# Gestion des loyers — V1.5.3.1
+# Gestion des loyers — V1.5.3.3
 
 Correction de la connexion Firebase :
 - fermeture immédiate de l’écran après authentification réussie ;
@@ -34,3 +34,9 @@ service firebase.storage {
 ```
 
 Dépose `index.html` et le dossier `data` ensemble sur GitHub Pages.
+
+
+## V1.5.3.3
+- Accordéon Langley restauré dans le thème sombre validé.
+- Cartes annuelles et mensuelles foncées, textes lisibles et badges Payé / En attente.
+- Aucun changement apporté à Firebase, Firestore, Storage ou aux fichiers Excel.

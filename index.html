@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#111111">
-<title>Gestion des loyers Premium — Okala & Langley · V1.5.3.1</title>
+<title>Gestion des loyers Premium — Okala & Langley · V1.5.3.3</title>
 <style>
 :root{
   --bg:#0b0b0c;--surface:#1a1a1d;--primary:#c47a2c;--primary2:#e0a458;
@@ -120,8 +120,32 @@ th{color:#e9b888}.download-card{display:flex;justify-content:space-between;align
 .auth-error{min-height:22px;color:#fca5a5;font-weight:700;font-size:.9rem}
 
 
-/* V1.5.3.1 — Historique Langley en accordéon */
+/* V1.5.3.3 — Historique Langley en accordéon */
 .langley-years{display:grid;gap:14px;margin-top:18px}.year-accordion,.month-accordion{border:1px solid var(--line);border-radius:18px;background:#fff;overflow:hidden}.year-accordion>summary,.month-accordion>summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:17px 18px;font-weight:900}.year-accordion>summary::-webkit-details-marker,.month-accordion>summary::-webkit-details-marker{display:none}.year-accordion>summary{background:#edf4f8;font-size:19px}.year-body{padding:12px;display:grid;gap:10px}.month-accordion>summary{padding:14px 16px}.month-accordion[open]>summary{border-bottom:1px solid var(--line)}.month-body{padding:16px;display:grid;gap:12px}.month-summary-left{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.month-amount{font-size:24px;font-weight:1000;color:var(--navy)}.proof-actions{display:flex;gap:10px;flex-wrap:wrap}.proof-image{max-width:min(94vw,900px);max-height:76vh;border-radius:16px;display:block;margin:auto}.proof-dialog{border:0;border-radius:22px;padding:0;max-width:min(96vw,980px);box-shadow:0 30px 100px #0007}.proof-dialog::backdrop{background:#071a2dbd}.proof-dialog-head{display:flex;justify-content:space-between;align-items:center;padding:15px 18px;border-bottom:1px solid var(--line);background:#fff}.proof-dialog-body{padding:16px;background:#eef3f6}.proof-close{border:0;background:#132c3d;color:#fff;border-radius:12px;padding:9px 14px;font-weight:900;cursor:pointer}.storage-note{font-size:13px;color:var(--muted);margin-top:8px}.upload-confirm{margin-top:10px;padding:12px 14px;border-radius:13px;background:#e7f8ef;color:#11663b;font-weight:850}.month-select{min-width:190px}
+
+/* V1.5.3.3 — Accordéon Langley sombre validé */
+.langley-years{display:grid;gap:14px;margin-top:18px}
+.year-accordion,.month-accordion{border:1px solid #4a3023;border-radius:18px;background:#100e0d;overflow:hidden;color:#f8eee7}
+.year-accordion>summary,.month-accordion>summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:14px;font-weight:900;color:#f8eee7}
+.year-accordion>summary::-webkit-details-marker,.month-accordion>summary::-webkit-details-marker{display:none}
+.year-accordion>summary{padding:18px 20px;background:#22150f;font-size:22px;color:#e49a61}
+.year-accordion>summary::after,.month-accordion>summary::after{content:'＋';font-size:22px;color:#e49a61;margin-left:auto}
+.year-accordion[open]>summary::after,.month-accordion[open]>summary::after{content:'−'}
+.year-accordion>summary>span:last-of-type{font-size:14px;color:#f0c7a8;margin-left:auto;margin-right:8px}
+.year-body{padding:12px;display:grid;gap:10px;background:#100e0d}
+.month-accordion{border-color:#3c2c24;border-radius:15px;background:#161210;margin:0}
+.month-accordion>summary{padding:16px;background:#161210}
+.month-accordion[open]>summary{border-bottom:1px solid #33251f}
+.month-summary-left{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.month-summary-left>span:first-child{font-size:18px;font-weight:800;color:#f8eee7}
+.month-body{padding:16px;display:grid;gap:12px;background:#161210;color:#d9c4b5;border-top:0}
+.month-amount{font-size:26px;font-weight:900;color:#fff;margin:0}
+.status{padding:6px 10px;border-radius:999px;font-size:11px;font-weight:900}
+.status.success{background:#153d28;color:#7ff0aa}
+.status.warning{background:#3a2d18;color:#ffd18d}
+.proof-actions .secondary,.month-body .secondary{background:transparent;border:1px solid #a36539;color:#e9a46f;border-radius:12px;padding:11px 14px;font-weight:800;box-shadow:none}
+.proof-actions .secondary:hover,.month-body .secondary:hover{background:#2b1b13}
+@media(max-width:600px){.year-accordion>summary,.month-accordion>summary{align-items:flex-start}.year-accordion>summary{font-size:20px}.year-accordion>summary>span:last-of-type{font-size:12px}}
 </style>
 </head>
 <body>
