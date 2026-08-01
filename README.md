@@ -40,3 +40,10 @@ Dépose `index.html` et le dossier `data` ensemble sur GitHub Pages.
 - Accordéon Langley restauré dans le thème sombre validé.
 - Cartes annuelles et mensuelles foncées, textes lisibles et badges Payé / En attente.
 - Aucun changement apporté à Firebase, Firestore, Storage ou aux fichiers Excel.
+
+## V1.5.3.4 — correction suivi mensuel Langley
+- Juillet 2026 est identifié comme caution, pas comme loyer.
+- À partir d’août 2026, les paiements sont identifiés comme loyers.
+- Après validation Firebase, le mois passe immédiatement à « Payé » ou « Caution payée ».
+- Mortgage et Strata sont enregistrés séparément pour chaque mois.
+- Changer de mois recharge uniquement ses propres données et remet les cases à zéro lorsqu’aucune donnée n’existe.
