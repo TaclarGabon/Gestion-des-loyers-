@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#111111">
-<title>Gestion des loyers Premium — Okala & Langley · V1.5.3</title>
+<title>Gestion des loyers Premium — Okala & Langley · V1.5.3.1</title>
 <style>
 :root{
   --bg:#0b0b0c;--surface:#1a1a1d;--primary:#c47a2c;--primary2:#e0a458;
@@ -120,7 +120,7 @@ th{color:#e9b888}.download-card{display:flex;justify-content:space-between;align
 .auth-error{min-height:22px;color:#fca5a5;font-weight:700;font-size:.9rem}
 
 
-/* V1.5.3 — Historique Langley en accordéon */
+/* V1.5.3.1 — Historique Langley en accordéon */
 .langley-years{display:grid;gap:14px;margin-top:18px}.year-accordion,.month-accordion{border:1px solid var(--line);border-radius:18px;background:#fff;overflow:hidden}.year-accordion>summary,.month-accordion>summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:17px 18px;font-weight:900}.year-accordion>summary::-webkit-details-marker,.month-accordion>summary::-webkit-details-marker{display:none}.year-accordion>summary{background:#edf4f8;font-size:19px}.year-body{padding:12px;display:grid;gap:10px}.month-accordion>summary{padding:14px 16px}.month-accordion[open]>summary{border-bottom:1px solid var(--line)}.month-body{padding:16px;display:grid;gap:12px}.month-summary-left{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.month-amount{font-size:24px;font-weight:1000;color:var(--navy)}.proof-actions{display:flex;gap:10px;flex-wrap:wrap}.proof-image{max-width:min(94vw,900px);max-height:76vh;border-radius:16px;display:block;margin:auto}.proof-dialog{border:0;border-radius:22px;padding:0;max-width:min(96vw,980px);box-shadow:0 30px 100px #0007}.proof-dialog::backdrop{background:#071a2dbd}.proof-dialog-head{display:flex;justify-content:space-between;align-items:center;padding:15px 18px;border-bottom:1px solid var(--line);background:#fff}.proof-dialog-body{padding:16px;background:#eef3f6}.proof-close{border:0;background:#132c3d;color:#fff;border-radius:12px;padding:9px 14px;font-weight:900;cursor:pointer}.storage-note{font-size:13px;color:var(--muted);margin-top:8px}.upload-confirm{margin-top:10px;padding:12px 14px;border-radius:13px;background:#e7f8ef;color:#11663b;font-weight:850}.month-select{min-width:190px}
 </style>
 </head>
@@ -528,14 +528,47 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     toast("Démonstration réinitialisée");
   });
 
+  function authMessage(code){
+    var messages={
+      "auth/invalid-credential":"Adresse e-mail ou mot de passe incorrect.",
+      "auth/invalid-login-credentials":"Adresse e-mail ou mot de passe incorrect.",
+      "auth/user-not-found":"Compte introuvable.",
+      "auth/wrong-password":"Mot de passe incorrect.",
+      "auth/invalid-email":"Adresse e-mail invalide.",
+      "auth/too-many-requests":"Trop de tentatives. Attends quelques minutes avant de réessayer.",
+      "auth/network-request-failed":"Connexion Internet indisponible ou bloquée.",
+      "auth/unauthorized-domain":"Ce domaine GitHub n’est pas autorisé dans Firebase.",
+      "auth/operation-not-allowed":"La connexion par e-mail et mot de passe n’est pas activée dans Firebase."
+    };
+    return messages[code] || ("Connexion impossible ("+(code||"erreur inconnue")+").");
+  }
+
   document.getElementById("loginForm").addEventListener("submit",async function(e){
     e.preventDefault();
-    var email=document.getElementById("loginEmail").value.trim(),password=document.getElementById("loginPassword").value;
+    var email=document.getElementById("loginEmail").value.trim();
+    var password=document.getElementById("loginPassword").value;
     var button=document.getElementById("loginButton"),error=document.getElementById("authError");
-    error.textContent="";button.disabled=true;button.textContent="Connexion…";
-    try{await auth.signInWithEmailAndPassword(email,password);document.getElementById("loginPassword").value="";}
-    catch(err){console.error(err);var code=(err&&err.code)?err.code:"erreur-inconnue"; error.textContent="Connexion impossible ("+code+").";}
-    finally{button.disabled=false;button.textContent="Se connecter";}
+    error.textContent="";
+    if(!firebaseReady || !auth){
+      error.textContent="Firebase n’est pas encore prêt. Vérifie Internet puis recharge la page.";
+      return;
+    }
+    button.disabled=true;button.textContent="Connexion…";
+    try{
+      var credential=await auth.signInWithEmailAndPassword(email,password);
+      currentFirebaseUser=credential.user;
+      var overlay=document.getElementById("authOverlay"),logout=document.getElementById("logoutBtn");
+      if(overlay) overlay.classList.add("hidden-auth");
+      if(logout) logout.hidden=false;
+      setFirebaseStatus("Firebase connecté","online");
+      document.getElementById("loginPassword").value="";
+    }catch(err){
+      console.error("Connexion Firebase",err);
+      error.textContent=authMessage(err&&err.code);
+      document.getElementById("loginPassword").focus();
+    }finally{
+      button.disabled=false;button.textContent="Se connecter";
+    }
   });
   document.getElementById("logoutBtn").addEventListener("click",function(){if(auth)auth.signOut();});
 

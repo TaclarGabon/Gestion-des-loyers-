@@ -1,3 +1,11 @@
+# Gestion des loyers — V1.5.3.1
+
+Correction de la connexion Firebase :
+- fermeture immédiate de l’écran après authentification réussie ;
+- conservation du mot de passe dans le champ en cas d’erreur ;
+- affichage du motif Firebase précis ;
+- interface Langley et stockage Interac inchangés.
+
 # Gestion des loyers — V1.5.3 Firebase Storage
 
 ## Nouveautés Langley
