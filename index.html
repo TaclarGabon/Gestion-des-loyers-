@@ -322,7 +322,7 @@ th{color:#e9b888}.download-card{display:flex;justify-content:space-between;align
       <form id="interacForm" class="form">
         <div class="form-grid">
           <label>Mois concerné<select id="rentMonth" class="month-select" required></select></label>
-          <label>Copie Interac<input id="proof" type="file" accept="image/jpeg,image/png,image/webp" required></label>
+          <label>Copie Interac<input id="proof" type="file" accept="image/jpeg,image/png,image/webp"></label>
         </div>
         <div class="ocr-row">
           <button id="interacOcrButton" class="secondary" type="button">🔎 Lire et préremplir</button>
@@ -334,7 +334,7 @@ th{color:#e9b888}.download-card{display:flex;justify-content:space-between;align
           <label>Expéditeur<input id="sender" value="Rylie Matson" required></label>
           <label>Montant reçu<input id="amount" value="2 495,00 $" required></label>
         </div>
-        <button id="saveInteracBtn" class="primary" type="submit">Enregistrer le paiement et la copie</button>
+        <button id="saveInteracBtn" class="primary" type="submit">Valider le mois</button>
         <div id="interacResult" class="saved"></div>
         <p id="automaticNameNote" class="storage-note">Nom automatique : Interac_Loyer_Riley_AAAA-MM_Reference.ext</p>
       </form>
@@ -1013,8 +1013,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   function monthLabelFromKey(key){var p=key.split("-");var names=["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];return names[Number(p[1])-1]+" "+p[0];}
   function safeReference(v){return String(v||"").replace(/[^A-Za-z0-9_-]/g,"").slice(0,40)||"SansReference";}
   function extensionForFile(file){var n=(file&&file.name||"").toLowerCase();if(n.endsWith(".png"))return ".png";if(n.endsWith(".webp"))return ".webp";return ".jpg";}
-  function paymentTypeForMonth(monthKey){return monthKey==="2026-07"?"caution":"loyer";}
-  function automaticInteracName(monthKey,reference,file){var type=paymentTypeForMonth(monthKey)==="caution"?"Caution":"Loyer";return "Interac_"+type+"_Riley_"+monthKey+"_"+safeReference(reference)+extensionForFile(file);}
+  function paymentTypeForMonth(monthKey){if(monthKey==="2026-06")return "charges";if(monthKey==="2026-07")return "caution";return "loyer";}
+  function automaticInteracName(monthKey,reference,file){var t=paymentTypeForMonth(monthKey),type=t==="caution"?"Caution":(t==="charges"?"Charges":"Loyer");return "Interac_"+type+"_Riley_"+monthKey+"_"+safeReference(reference)+extensionForFile(file);}
   async function uploadInteracProof(file,monthKey,reference){
     if(!storage||!currentFirebaseUser) throw new Error("Firebase Storage n’est pas connecté");
     var name=automaticInteracName(monthKey,reference,file),year=monthKey.slice(0,4),path="interac/riley/"+year+"/"+name;
@@ -1024,22 +1024,25 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   }
   document.getElementById("interacForm").addEventListener("submit", async function(e){
     e.preventDefault();
-    var file=document.getElementById("proof").files[0],monthKey=document.getElementById("rentMonth").value,reference=document.getElementById("reference").value.trim(),btn=document.getElementById("saveInteracBtn");
-    if(!file){toast("Ajoute la capture Interac");return;}
-    btn.disabled=true;btn.textContent="Enregistrement dans Firebase…";setInteracOcrStatus("Téléversement sécurisé de la copie Interac…","working");
-    try{
-      var uploaded=await uploadInteracProof(file,monthKey,reference);
-      var entry={month:monthLabelFromKey(monthKey),monthKey:monthKey,paid:true,paymentType:paymentTypeForMonth(monthKey),reference:reference,date:document.getElementById("date").value,sender:document.getElementById("sender").value.trim(),amount:document.getElementById("amount").value.trim(),fileName:uploaded.fileName,proofUrl:uploaded.proofUrl,storagePath:uploaded.storagePath,mortgagePaid:document.getElementById("mortgage").checked,strataPaid:document.getElementById("strata").checked};
-      var idx=state.langleyPayments.findIndex(function(x){return x.monthKey===monthKey;});if(idx>=0)state.langleyPayments[idx]=entry;else state.langleyPayments.push(entry);
-      state.rent=entry;
-      try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch(e){}
-      await syncStateToFirebase();
-      await addPaymentToFirebase(entry.paymentType==="caution"?"Caution Interac":"Loyer Interac","riley",entry);
-      render();
-      setInteracOcrStatus("✅ "+(entry.paymentType==="caution"?"Caution":"Loyer")+" de "+entry.month+" enregistré(e) dans Firebase sous « "+uploaded.fileName+" ».","success");toast((entry.paymentType==="caution"?"Caution":"Loyer")+" et copie Interac enregistrés");
-      document.getElementById("proof").value="";
-    }catch(err){console.error(err);setInteracOcrStatus("Échec de l’enregistrement Firebase Storage : "+err.message,"error");toast("Copie non enregistrée : ne supprime pas le fichier original");}
-    finally{btn.disabled=false;btn.textContent="Enregistrer le paiement et la copie";}
+    var file=document.getElementById("proof").files[0],monthKey=document.getElementById("rentMonth").value,reference=document.getElementById("reference").value.trim(),btn=document.getElementById("saveInteracBtn"),ptype=paymentTypeForMonth(monthKey);
+    if(ptype!=="charges"&&!file){toast("Ajoute la capture Interac");return;}
+    if(!document.getElementById("mortgage").checked||!document.getElementById("strata").checked){toast("Confirme Mortgage et Strata avant de valider");return;}
+    var existing=paymentForMonth(monthKey)||{};
+    var entry={month:monthLabelFromKey(monthKey),monthKey:monthKey,paid:true,paymentType:ptype,reference:ptype==="charges"?"":reference,date:ptype==="charges"?"":document.getElementById("date").value,sender:ptype==="charges"?"":document.getElementById("sender").value.trim(),amount:ptype==="charges"?"":document.getElementById("amount").value.trim(),fileName:existing.fileName||"",proofUrl:existing.proofUrl||"",storagePath:existing.storagePath||"",mortgagePaid:true,strataPaid:true};
+    if(file){entry.fileName=automaticInteracName(monthKey,reference,file);entry.proofUrl=URL.createObjectURL(file);entry.localPreview=true;}
+    var idx=state.langleyPayments.findIndex(function(x){return x.monthKey===monthKey;});if(idx>=0)state.langleyPayments[idx]=entry;else state.langleyPayments.push(entry);
+    state.rent=entry;try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch(e){}
+    render();toast(ptype==="charges"?"Charges du mois validées":(ptype==="caution"?"Caution et charges validées":"Loyer et charges validés"));
+    document.getElementById("proof").value="";btn.textContent="Valider le mois";
+    (async function(){
+      try{
+        if(file){var uploaded=await uploadInteracProof(file,monthKey,reference);entry.fileName=uploaded.fileName;entry.proofUrl=uploaded.proofUrl;entry.storagePath=uploaded.storagePath;entry.localPreview=false;}
+        await syncStateToFirebase();
+        await addPaymentToFirebase(ptype==="charges"?"Charges propriétaire":(ptype==="caution"?"Caution Interac":"Loyer Interac"),"riley",entry);
+        try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch(e){}
+        render();setInteracOcrStatus("✅ Sauvegarde Firebase terminée.","success");
+      }catch(err){console.error(err);setInteracOcrStatus("Le mois est validé localement. La sauvegarde Firebase sera retentée à la prochaine modification.","error");}
+    })();
   });
 
   document.getElementById("mortgage").addEventListener("change", function(){updateMonthlyChargeLabels();});
@@ -1074,15 +1077,15 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
   function buildMonthOptions(){
     var select=document.getElementById("rentMonth"),today=new Date(),startYear=2026,endYear=Math.max(2028,today.getFullYear()+1),html="";
-    for(var y=startYear;y<=endYear;y++)for(var m=1;m<=12;m++){if(y===2026&&m<7)continue;var key=y+"-"+String(m).padStart(2,"0");html+='<option value="'+key+'">'+monthLabelFromKey(key)+'</option>';}
-    select.innerHTML=html;var defaultKey=today.getFullYear()+"-"+String(today.getMonth()+1).padStart(2,"0");if(select.querySelector('option[value="'+defaultKey+'"]'))select.value=defaultKey;else select.value="2026-08";
+    for(var y=startYear;y<=endYear;y++)for(var m=1;m<=12;m++){if(y===2026&&m<6)continue;var key=y+"-"+String(m).padStart(2,"0");html+='<option value="'+key+'">'+monthLabelFromKey(key)+'</option>';}
+    select.innerHTML=html;var defaultKey=today.getFullYear()+"-"+String(today.getMonth()+1).padStart(2,"0");if(select.querySelector('option[value="'+defaultKey+'"]'))select.value=defaultKey;else select.value="2026-06";
   }
   function paymentForMonth(key){return (state.langleyPayments||[]).find(function(x){return x.monthKey===key;});}
   function renderLangleyYears(){
     var box=document.getElementById("langleyYears"),today=new Date(),years=[];for(var y=2026;y<=Math.max(2028,today.getFullYear()+1);y++)years.push(y);var out="";
     years.forEach(function(year){var paidCount=(state.langleyPayments||[]).filter(function(x){return String(x.monthKey||"").startsWith(year+"-")&&x.paid;}).length;out+='<details class="year-accordion" '+(year===2026?'open':'')+'><summary><span>'+year+'</span><span>'+paidCount+' paiement'+(paidCount>1?'s':'')+' reçu'+(paidCount>1?'s':'')+'</span></summary><div class="year-body">';
-      for(var m=1;m<=12;m++){if(year===2026&&m<7)continue;var key=year+"-"+String(m).padStart(2,"0"),p=paymentForMonth(key),paid=!!(p&&p.paid),isCaution=key==="2026-07",statusLabel=paid?(isCaution?"Caution payée":"Payé"):"En attente";out+='<details class="month-accordion"><summary><span class="month-summary-left"><span>'+monthLabelFromKey(key)+'</span><span class="status '+(paid?'success':'warning')+'">'+statusLabel+'</span></span><span>›</span></summary><div class="month-body">';
-        if(paid){out+='<div class="month-amount">'+esc(p.amount||"2 495,00 $")+'</div><div>Type : '+(isCaution?'Caution':'Loyer')+'<br>Date : '+esc(p.date||"—")+'<br>Référence : '+esc(p.reference||"—")+'<br>Mortgage : '+(p.mortgagePaid?'Payé':'Non payé')+'<br>Strata : '+(p.strataPaid?'Payé':'Non payé')+'<br>Fichier : '+esc(p.fileName||"Copie non encore enregistrée")+'</div><div class="proof-actions">';if(p.proofUrl)out+='<button class="secondary view-proof" type="button" data-key="'+key+'">🧾 Voir la copie Interac</button>';else out+='<button class="secondary add-proof" type="button" data-key="'+key+'">📎 Ajouter la copie Interac</button>';out+='<button class="secondary edit-month" type="button" data-key="'+key+'">✏️ Modifier ce mois</button></div>';}else out+='<div>Aucun '+(isCaution?'dépôt de caution':'loyer')+' enregistré pour ce mois.</div><button class="secondary add-proof" type="button" data-key="'+key+'">📎 Ajouter '+(isCaution?'la caution':'le paiement')+' et la copie</button>';
+      for(var m=1;m<=12;m++){if(year===2026&&m<7)continue;var key=year+"-"+String(m).padStart(2,"0"),p=paymentForMonth(key),paid=!!(p&&p.paid),ptype=paymentTypeForMonth(key),isCaution=ptype==="caution",isCharges=ptype==="charges",statusLabel=paid?(isCharges?"Charges payées":(isCaution?"Caution reçue":"Loyer payé")):"En attente";out+='<details class="month-accordion"><summary><span class="month-summary-left"><span>'+monthLabelFromKey(key)+'</span><span class="status '+(paid?'success':'warning')+'">'+statusLabel+'</span></span><span>›</span></summary><div class="month-body">';
+        if(paid){out+='<div class="month-amount">'+esc(p.amount||"2 495,00 $")+'</div><div>Type : '+(isCharges?'Charges propriétaire':(isCaution?'Caution':'Loyer'))+'<br>Date : '+esc(p.date||"—")+'<br>Référence : '+esc(p.reference||"—")+'<br>Mortgage : '+(p.mortgagePaid?'Payé':'Non payé')+'<br>Strata : '+(p.strataPaid?'Payé':'Non payé')+'<br>Fichier : '+esc(p.fileName||"Copie non encore enregistrée")+'</div><div class="proof-actions">';if(p.proofUrl)out+='<button class="secondary view-proof" type="button" data-key="'+key+'">🧾 Voir la copie Interac</button>';else out+='<button class="secondary add-proof" type="button" data-key="'+key+'">📎 Ajouter la copie Interac</button>';out+='<button class="secondary edit-month" type="button" data-key="'+key+'">✏️ Modifier ce mois</button></div>';}else out+='<div>'+ (isCharges?'Aucune charge propriétaire validée pour ce mois.':('Aucun '+(isCaution?'dépôt de caution':'loyer')+' enregistré pour ce mois.')) +'</div><button class="secondary add-proof" type="button" data-key="'+key+'">'+(isCharges?'✓ Valider Mortgage et Strata':('📎 Ajouter '+(isCaution?'la caution':'le paiement')+' et la copie'))+'</button>';
         out+='</div></details>';}
       out+='</div></details>';});box.innerHTML=out;
     box.querySelectorAll('.view-proof').forEach(function(btn){btn.addEventListener('click',function(){openProof(this.dataset.key);});});
@@ -1099,6 +1102,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     document.getElementById('mortgage').checked=!!(p&&p.mortgagePaid);
     document.getElementById('strata').checked=!!(p&&p.strataPaid);
     document.getElementById('proof').value='';
+    var chargesOnly=paymentTypeForMonth(key)==='charges';
+    ['proof','reference','date','sender','amount','interacOcrButton'].forEach(function(id){var el=document.getElementById(id);if(el)el.disabled=chargesOnly;});
     updateMonthlyChargeLabels();
     renderSelectedMonthStatus();
     document.getElementById('interacForm').scrollIntoView({behavior:'smooth',block:'start'});
@@ -1107,10 +1112,10 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   function openProof(key){var p=paymentForMonth(key);if(!p||!p.proofUrl){toast("Aucune copie Firebase pour ce mois");return;}var d=document.getElementById("proofDialog");document.getElementById("proofDialogTitle").textContent="Copie Interac — "+p.month;document.getElementById("proofDialogImage").src=p.proofUrl;if(typeof d.showModal==="function")d.showModal();else window.open(p.proofUrl,"_blank","noopener");}
   document.getElementById("proofDialogClose").addEventListener("click",function(){document.getElementById("proofDialog").close();});
   function renderSelectedMonthStatus(){
-    var currentKey=document.getElementById("rentMonth")&&document.getElementById("rentMonth").value,p=currentKey?paymentForMonth(currentKey):null,rentStatus=document.getElementById("rentStatus"),isCaution=currentKey==="2026-07";
-    rentStatus.textContent=p&&p.paid?(isCaution?"Caution payée":"Payé"):"En attente";
+    var currentKey=document.getElementById("rentMonth")&&document.getElementById("rentMonth").value,p=currentKey?paymentForMonth(currentKey):null,rentStatus=document.getElementById("rentStatus"),ptype=paymentTypeForMonth(currentKey),isCaution=ptype==="caution",isCharges=ptype==="charges";
+    rentStatus.textContent=p&&p.paid?(isCharges?"Charges payées":(isCaution?"Caution reçue":"Loyer payé")):"En attente";
     rentStatus.className="status "+(p&&p.paid?"success":"warning");
-    var note=document.getElementById("automaticNameNote");if(note)note.textContent="Nom automatique : Interac_"+(isCaution?"Caution":"Loyer")+"_Riley_AAAA-MM_Reference.ext";
+    var note=document.getElementById("automaticNameNote");if(note)note.textContent=isCharges?"Juin 2026 : aucun Interac requis.":("Nom automatique : Interac_"+(isCaution?"Caution":"Loyer")+"_Riley_AAAA-MM_Reference.ext");
   }
   function render(){
     renderSelectedMonthStatus();updateMonthlyChargeLabels();
