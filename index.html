@@ -397,8 +397,12 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     return JSON.parse(JSON.stringify(value));
   }
 
-  async function syncStateToFirebase(){
-    if(!firebaseReady || !currentFirebaseUser || !db || remoteLoading) return;
+  async function syncStateToFirebase(strict){
+    if(!firebaseReady || !currentFirebaseUser || !db || remoteLoading){
+      var notReady=new Error("Firebase n’est pas prêt");
+      if(strict) throw notReady;
+      return false;
+    }
     try{
       await db.collection("parametres").doc("gestion-loyers-partagee").set({
         state:cleanForFirestore(state),
@@ -406,9 +410,12 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         updatedBy:currentFirebaseUser.email||""
       },{merge:true});
       setFirebaseStatus("Sauvegardé dans Firebase","online");
+      return true;
     }catch(err){
       console.error("Synchronisation Firebase",err);
       setFirebaseStatus("Sauvegarde Firebase impossible","error");
+      if(strict) throw err;
+      return false;
     }
   }
 
@@ -1025,24 +1032,54 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   document.getElementById("interacForm").addEventListener("submit", async function(e){
     e.preventDefault();
     var file=document.getElementById("proof").files[0],monthKey=document.getElementById("rentMonth").value,reference=document.getElementById("reference").value.trim(),btn=document.getElementById("saveInteracBtn"),ptype=paymentTypeForMonth(monthKey);
-    if(ptype!=="charges"&&!file){toast("Ajoute la capture Interac");return;}
+    if(ptype!=="charges"&&!file&&!paymentForMonth(monthKey)){toast("Ajoute la capture Interac");return;}
     if(!document.getElementById("mortgage").checked||!document.getElementById("strata").checked){toast("Confirme Mortgage et Strata avant de valider");return;}
+
+    var previousIndex=state.langleyPayments.findIndex(function(x){return x.monthKey===monthKey;});
+    var previousEntry=previousIndex>=0?JSON.parse(JSON.stringify(state.langleyPayments[previousIndex])):null;
     var existing=paymentForMonth(monthKey)||{};
     var entry={month:monthLabelFromKey(monthKey),monthKey:monthKey,paid:true,paymentType:ptype,reference:ptype==="charges"?"":reference,date:ptype==="charges"?"":document.getElementById("date").value,sender:ptype==="charges"?"":document.getElementById("sender").value.trim(),amount:ptype==="charges"?"":document.getElementById("amount").value.trim(),fileName:existing.fileName||"",proofUrl:existing.proofUrl||"",storagePath:existing.storagePath||"",mortgagePaid:true,strataPaid:true};
-    if(file){entry.fileName=automaticInteracName(monthKey,reference,file);entry.proofUrl=URL.createObjectURL(file);entry.localPreview=true;}
-    var idx=state.langleyPayments.findIndex(function(x){return x.monthKey===monthKey;});if(idx>=0)state.langleyPayments[idx]=entry;else state.langleyPayments.push(entry);
-    state.rent=entry;try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch(e){}
-    render();toast(ptype==="charges"?"Charges du mois validées":(ptype==="caution"?"Caution et charges validées":"Loyer et charges validés"));
-    document.getElementById("proof").value="";btn.textContent="Valider le mois";
-    (async function(){
-      try{
-        if(file){var uploaded=await uploadInteracProof(file,monthKey,reference);entry.fileName=uploaded.fileName;entry.proofUrl=uploaded.proofUrl;entry.storagePath=uploaded.storagePath;entry.localPreview=false;}
-        await syncStateToFirebase();
-        await addPaymentToFirebase(ptype==="charges"?"Charges propriétaire":(ptype==="caution"?"Caution Interac":"Loyer Interac"),"riley",entry);
-        try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch(e){}
-        render();setInteracOcrStatus("✅ Sauvegarde Firebase terminée.","success");
-      }catch(err){console.error(err);setInteracOcrStatus("Le mois est validé localement. La sauvegarde Firebase sera retentée à la prochaine modification.","error");}
-    })();
+    if(file) entry.fileName=automaticInteracName(monthKey,reference,file);
+    if(previousIndex>=0) state.langleyPayments[previousIndex]=entry; else state.langleyPayments.push(entry);
+    state.rent=entry;
+
+    btn.disabled=true;btn.textContent="Sauvegarde dans Firebase…";
+    setInteracOcrStatus("Sauvegarde du mois dans Firebase…","");
+    try{
+      await syncStateToFirebase(true);
+      try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch(e){}
+      render();
+      toast(ptype==="charges"?"Charges enregistrées dans Firebase":(ptype==="caution"?"Caution enregistrée dans Firebase":"Loyer enregistré dans Firebase"));
+      setInteracOcrStatus("✅ Mois enregistré dans Firebase. Il restera visible après actualisation.","success");
+      document.getElementById("proof").value="";
+
+      if(file){
+        (async function(){
+          try{
+            var uploaded=await uploadInteracProof(file,monthKey,reference);
+            entry.fileName=uploaded.fileName;entry.proofUrl=uploaded.proofUrl;entry.storagePath=uploaded.storagePath;
+            await syncStateToFirebase(true);
+            try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch(e){}
+            render();
+            setInteracOcrStatus("✅ Mois et copie Interac sauvegardés dans Firebase.","success");
+          }catch(err){
+            console.error(err);
+            setInteracOcrStatus("Le mois est sauvegardé. La copie Interac n’a pas encore été envoyée; tu peux la rajouter plus tard.","error");
+          }
+        })();
+      }
+      addPaymentToFirebase(ptype==="charges"?"Charges propriétaire":(ptype==="caution"?"Caution Interac":"Loyer Interac"),"riley",entry);
+    }catch(err){
+      console.error(err);
+      if(previousIndex>=0) state.langleyPayments[previousIndex]=previousEntry;
+      else state.langleyPayments=state.langleyPayments.filter(function(x){return x.monthKey!==monthKey;});
+      state.rent=previousEntry||freshState().rent;
+      render();
+      setInteracOcrStatus("❌ Le mois n’a pas été enregistré dans Firebase. Vérifie la connexion puis recommence.","error");
+      toast("Sauvegarde Firebase échouée");
+    }finally{
+      btn.disabled=false;btn.textContent="Valider le mois";
+    }
   });
 
   document.getElementById("mortgage").addEventListener("change", function(){updateMonthlyChargeLabels();});
