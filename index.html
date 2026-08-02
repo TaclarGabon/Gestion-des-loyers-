@@ -172,7 +172,6 @@ th{color:#e9b888}.download-card{display:flex;justify-content:space-between;align
       <h1 id="title">Bonjour Edan 👋</h1>
       <div class="firebase-bar"><span id="firebaseDot" class="firebase-dot"></span><span id="firebaseStatus">Connexion Firebase…</span><button id="logoutBtn" class="logout-btn" type="button" hidden>Déconnexion</button></div>
     </div>
-    <button id="resetBtn" class="icon-btn" type="button">↻</button>
   </header>
 
   <section id="home" class="view active">
@@ -334,7 +333,6 @@ th{color:#e9b888}.download-card{display:flex;justify-content:space-between;align
           <label>Expéditeur<input id="sender" value="Rylie Matson" required></label>
           <label>Montant reçu<input id="amount" value="2 495,00 $" required></label>
         </div>
-        <button id="saveInteracBtn" class="primary" type="submit">Valider le mois</button>
         <div id="interacResult" class="saved"></div>
         <p id="automaticNameNote" class="storage-note">Nom automatique : Interac_Loyer_Riley_AAAA-MM_Reference.ext</p>
       </form>
@@ -344,6 +342,7 @@ th{color:#e9b888}.download-card{display:flex;justify-content:space-between;align
       <div class="panel-title"><div><h3>⚠️ Charges du propriétaire pour le mois sélectionné</h3><p>Les cases sont enregistrées séparément pour chaque mois et se remettent à zéro lorsque tu changes de mois.</p></div></div>
       <div class="reminder"><div><span>Mortgage RBC</span><strong>1 882,01 $</strong><small>À vérifier chaque mois</small></div><label id="mortgageWrap" class="check"><input id="mortgage" type="checkbox"><span id="mortgageText">Non payé</span></label></div>
       <div class="reminder"><div><span>Strata</span><strong>417,29 $</strong><small>À vérifier chaque mois</small></div><label id="strataWrap" class="check"><input id="strata" type="checkbox"><span id="strataText">Non payé</span></label></div>
+      <button id="saveInteracBtn" class="primary" type="submit" form="interacForm" style="margin-top:18px;width:100%">Valider le mois</button>
     </div>
   </section>
 </main>
@@ -554,15 +553,6 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     t.classList.add("show");
     setTimeout(function(){t.classList.remove("show");},2000);
   }
-
-  document.getElementById("resetBtn").addEventListener("click", function(){
-    if(!confirm("Réinitialiser les données enregistrées sur cet appareil ?")) return;
-    state=freshState();
-    save();
-    render();
-    go("home");
-    toast("Démonstration réinitialisée");
-  });
 
   function authMessage(code){
     var messages={
