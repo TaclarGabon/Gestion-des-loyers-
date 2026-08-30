@@ -253,9 +253,9 @@ th{color:#e9b888}.download-card{display:flex;justify-content:space-between;align
     <div class="profile"><p class="eyebrow" style="color:white">OKALA — Studio 2</p><h2>Nelly Loriane Engong Ngomo</h2><p>Paiement entre le 1er et le 5 du mois suivant.</p></div>
     <div class="download-card excel-download-card"><div><strong>📊 Fichier Excel de Nelly</strong><span>Le modèle corrigé est conservé. Les nouveaux bordereaux enregistrés sont ajoutés au suivi de Nelly.</span></div><button id="downloadNellyExcel" class="primary download-link" type="button">Télécharger Excel</button></div>
     <div class="summary-grid">
-      <div class="summary"><span>Total dû depuis août 2025</span><strong>1 400 000 FCFA</strong></div>
-      <div class="summary"><span>Total versé</span><strong>1 300 000 FCFA</strong></div>
-      <div class="summary"><span>Reliquat actuel</span><strong>100 000 FCFA</strong></div>
+      <div class="summary"><span>Total dû depuis août 2025</span><strong id="nellyTotalDue">1 400 000 FCFA</strong></div>
+      <div class="summary"><span>Total versé</span><strong id="nellyTotalPaid">1 300 000 FCFA</strong></div>
+      <div class="summary"><span>Reliquat actuel</span><strong id="nellyBalance">100 000 FCFA</strong></div>
     </div>
     <div class="panel"><h3>Historique informatif</h3><p>Dette historique antérieure : <strong>800 000 FCFA</strong>. Cette information ne rentre pas dans le calcul du reliquat actuel.</p><div class="note"><span>50 000 FCFA déjà versés à Christina en décembre 2021</span><span>Remise des clés : 8 août 2025</span><span>Loyer : 100 000 FCFA jusqu’en mars 2026, puis 150 000 FCFA à partir d’avril 2026</span><span>Reliquat actuel : 50 000 FCFA en avril + 50 000 FCFA en mai</span></div></div>
 
@@ -279,30 +279,32 @@ th{color:#e9b888}.download-card{display:flex;justify-content:space-between;align
 
     <div class="panel"><h3>Échéances à venir</h3><div class="table-wrap"><table>
       <thead><tr><th>Période</th><th>Montant prévu</th><th>Statut</th></tr></thead>
-      <tbody>
-        <tr><td>Août 2026</td><td>150 000 FCFA</td><td><span class="status warning">À venir</span></td></tr>
-        <tr><td>Septembre 2026</td><td>150 000 FCFA</td><td><span class="status warning">À venir</span></td></tr>
-        <tr><td>Octobre 2026</td><td>150 000 FCFA</td><td><span class="status warning">À venir</span></td></tr>
-        <tr><td>Novembre 2026</td><td>150 000 FCFA</td><td><span class="status warning">À venir</span></td></tr>
-        <tr><td>Décembre 2026</td><td>150 000 FCFA</td><td><span class="status warning">À venir</span></td></tr>
-      </tbody>
+      <tbody id="nellyUpcomingBody"></tbody>
     </table></div></div>
 
     <div class="panel bank-form">
-      <div class="panel-title"><div><h3>Ajouter un bordereau UGB</h3><p>Le bordereau reste enregistré uniquement dans le compte de Nelly.</p></div></div>
+      <div class="panel-title"><div><h3>Ajouter un paiement de Nelly</h3><p>Le paiement peut être justifié par un bordereau UGB, un virement compte à compte ou une autre preuve.</p></div></div>
       <form id="nellyUgbForm" class="form">
         <div class="form-grid">
-          <label>Mois concerné<input id="nellyMonth" placeholder="Ex. Juillet 2026" required></label>
+          <label>Mode de paiement
+            <select id="nellyPaymentMode">
+              <option value="ugb">Bordereau UGB</option>
+              <option value="virement">Virement compte à compte</option>
+              <option value="autre">Autre justificatif</option>
+            </select>
+          </label>
+          <label>Mois concerné<input id="nellyMonth" placeholder="Ex. Août 2026" required></label>
           <label>Date du versement<input id="nellyDate" type="date" required></label>
-          <label>Référence du bordereau<input id="nellyReference" placeholder="Ex. 173246" required></label>
+          <label id="nellyReferenceLabel">Référence du bordereau<input id="nellyReference" placeholder="Ex. 173246" required></label>
           <label>Montant versé<input id="nellyAmount" placeholder="Ex. 150 000 FCFA" required></label>
+          <label>Note / précision<input id="nellyNote" placeholder="Ex. Confirmé par Nelly sur WhatsApp"></label>
         </div>
-        <label>Photo du bordereau à analyser<input id="nellyProof" type="file" accept="image/*,.pdf"></label>
+        <label id="nellyProofLabel">Justificatif du paiement<input id="nellyProof" type="file" accept="image/*,.pdf"></label>
         <div class="ocr-row">
           <button id="nellyOcrButton" class="secondary" type="button">🔎 Lire et préremplir</button>
-          <span id="nellyOcrStatus" class="ocr-status">Choisis une photo nette du bordereau.</span>
+          <span id="nellyOcrStatus" class="ocr-status">Pour un bordereau UGB, ajoute une photo nette. Pour un virement, joins simplement la capture comme preuve.</span>
         </div>
-        <button class="primary" type="submit">Vérifier puis enregistrer le bordereau de Nelly</button>
+        <button class="primary" type="submit">Valider et enregistrer le paiement de Nelly</button>
       </form>
       <div id="nellyUgbHistory" class="bank-history"></div>
     </div>
@@ -971,7 +973,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   function fillEntry(doc,rowNum,person,entry){
     var row=findRowByNumber(doc,rowNum);if(!row)return false;var due=dueForEntry(person,entry.month),paid=parseMoneyNumber(entry.amount),balance=Math.max(0,due-paid),status=balance===0?"À jour":"Partiel",ref=String(entry.reference||"").replace(/^UGB\s*N?[°º]?/i,"").trim(),dparts=String(entry.date||"").split("-"),dateObj=dparts.length===3?new Date(Number(dparts[0]),Number(dparts[1])-1,Number(dparts[2])):null,deadline=deadlineForEntry(person,entry.month),periodText=person==="sandrine"?"Du 16 au 19 du même mois":"Du 1er au 5 du mois suivant";
     var old=[];for(var c=1;c<=10;c++)old[c]=rowCell(row,c);
-    var vals=[[1,"n",dateObj?excelSerial(dateObj):""],[2,"str",entry.month],[3,"str","UGB N°"+ref],[4,"n",due],[5,"n",paid],[6,"n",balance],[7,"str",status],[8,"str","Bordereau UGB fourni"],[9,"str",periodText],[10,"n",deadline?excelSerial(deadline):""]];
+    var mode=entry.paymentMode||"ugb",refText=mode==="ugb"?("UGB N°"+ref):(entry.reference|| (mode==="virement"?"Virement compte à compte":"Autre justificatif")),noteText=mode==="ugb"?"Bordereau UGB fourni":(mode==="virement"?"Virement compte à compte"+(entry.note?" — "+entry.note:""):"Autre justificatif"+(entry.note?" — "+entry.note:""));
+    var vals=[[1,"n",dateObj?excelSerial(dateObj):""],[2,"str",entry.month],[3,"str",refText],[4,"n",due],[5,"n",paid],[6,"n",balance],[7,"str",status],[8,"str",noteText],[9,"str",periodText],[10,"n",deadline?excelSerial(deadline):""]];
     vals.forEach(function(x){var cell=setCell(row,x[0],x[1],x[2],null);copyStyle(old[x[0]],cell);});return true;
   }
   async function downloadTenantExcel(person){
@@ -988,24 +991,83 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   document.getElementById("downloadSandrineExcel").addEventListener("click",function(){downloadTenantExcel("sandrine");});
   document.getElementById("downloadNellyExcel").addEventListener("click",function(){downloadTenantExcel("nelly");});
 
+  function normalizeMonthFr(label){
+    var t=String(label||"").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+    var months={janvier:"01",fevrier:"02",mars:"03",avril:"04",mai:"05",juin:"06",juillet:"07",aout:"08",septembre:"09",octobre:"10",novembre:"11",decembre:"12"};
+    var m=t.match(/(janvier|fevrier|mars|avril|mai|juin|juillet|aout|septembre|octobre|novembre|decembre)\s+(20\d{2})/);
+    return m ? m[2]+"-"+months[m[1]] : "";
+  }
+  function formatFcfa(n){return Math.round(Number(n)||0).toLocaleString("fr-FR").replace(/\u202f/g," ")+" FCFA";}
+  function latestNellyEntriesByMonth(){
+    var map={};
+    (state.ugb.nelly||[]).forEach(function(e){var k=normalizeMonthFr(e.month);if(k&&!map[k])map[k]=e;});
+    return map;
+  }
+  function renderNellyTotals(){
+    var baseDue=1400000,basePaid=1300000,map=latestNellyEntriesByMonth(),due=baseDue,paid=basePaid;
+    Object.keys(map).forEach(function(k){if(k>"2026-07"){due+=150000;paid+=parseMoneyNumber(map[k].amount);}});
+    var bal=Math.max(0,due-paid);
+    var a=document.getElementById("nellyTotalDue"),b=document.getElementById("nellyTotalPaid"),c=document.getElementById("nellyBalance");
+    if(a)a.textContent=formatFcfa(due);if(b)b.textContent=formatFcfa(paid);if(c)c.textContent=formatFcfa(bal);
+  }
+  function renderNellyUpcoming(){
+    var body=document.getElementById("nellyUpcomingBody");if(!body)return;
+    var map=latestNellyEntriesByMonth(),months=[["2026-08","Août 2026"],["2026-09","Septembre 2026"],["2026-10","Octobre 2026"],["2026-11","Novembre 2026"],["2026-12","Décembre 2026"]],html="";
+    months.forEach(function(x){var e=map[x[0]],paid=e?parseMoneyNumber(e.amount):0,ok=paid>=150000;html+='<tr><td>'+x[1]+'</td><td>150 000 FCFA</td><td><span class="status '+(ok?'success':'warning')+'">'+(ok?'Payé':'À venir')+'</span></td></tr>';});
+    body.innerHTML=html;
+  }
+  async function uploadNellyProof(file,entry){
+    if(!file||!storage||!currentFirebaseUser)return null;
+    try{
+      var key=normalizeMonthFr(entry.month)||"sans-mois",ext=(file.name.match(/\.[A-Za-z0-9]+$/)||[".jpg"])[0].toLowerCase(),mode=entry.paymentMode||"autre",name="Preuve_Nelly_"+key+"_"+mode+ext,path="preuves/nelly/"+key.slice(0,4)+"/"+name;
+      var snap=await storage.ref(path).put(file,{contentType:file.type||"application/octet-stream"});
+      return {proofUrl:await snap.ref.getDownloadURL(),storagePath:path,fileName:name};
+    }catch(err){console.warn("Preuve Nelly non téléversée",err);return null;}
+  }
   function bindUgbForm(person){
     var form=document.getElementById(person+"UgbForm");
-    form.addEventListener("submit",function(e){
+    form.addEventListener("submit",async function(e){
       e.preventDefault();
-      var proof=document.getElementById(person+"Proof").files[0];
+      var proof=document.getElementById(person+"Proof").files[0],mode=person==="nelly"?document.getElementById("nellyPaymentMode").value:"ugb",refEl=document.getElementById(person+"Reference"),reference=refEl.value.trim();
+      if(person==="nelly"&&mode!=="ugb"&&!reference)reference=mode==="virement"?"Virement compte à compte":"Autre justificatif";
       var entry={
         month:document.getElementById(person+"Month").value.trim(),
         date:document.getElementById(person+"Date").value,
-        reference:document.getElementById(person+"Reference").value.trim(),
+        reference:reference,
         amount:document.getElementById(person+"Amount").value.trim(),
-        fileName:proof?proof.name:"Aucune preuve jointe"
+        fileName:proof?proof.name:"Aucune preuve jointe",
+        paymentMode:mode,
+        note:person==="nelly"?(document.getElementById("nellyNote").value.trim()):""
       };
+      if(person==="nelly"){
+        var key=normalizeMonthFr(entry.month),idx=(state.ugb.nelly||[]).findIndex(function(x){return normalizeMonthFr(x.month)===key&&key;});
+        if(idx>=0)state.ugb.nelly.splice(idx,1);
+      }
       state.ugb[person].unshift(entry);
-      save();addPaymentToFirebase("UGB",person,entry);form.reset();renderUgb(person);toast("Bordereau UGB enregistré et synchronisé");
+      save();renderUgb(person);renderNellyTotals();renderNellyUpcoming();
+      toast(person==="nelly"?"Paiement de Nelly enregistré":"Bordereau UGB enregistré et synchronisé");
+      if(person==="nelly"&&proof){
+        var uploaded=await uploadNellyProof(proof,entry);
+        if(uploaded){Object.assign(entry,uploaded);save();renderUgb(person);toast("Justificatif de Nelly sauvegardé dans Firebase");}
+      }
+      addPaymentToFirebase(mode==="ugb"?"UGB":(mode==="virement"?"Virement compte à compte":"Autre justificatif"),person,entry);
+      form.reset();
+      if(person==="nelly")updateNellyPaymentMode();
+      renderUgb(person);renderNellyTotals();renderNellyUpcoming();
     });
+  }
+  function updateNellyPaymentMode(){
+    var mode=document.getElementById("nellyPaymentMode").value,ref=document.getElementById("nellyReference"),lab=document.getElementById("nellyReferenceLabel"),btn=document.getElementById("nellyOcrButton"),status=document.getElementById("nellyOcrStatus");
+    if(mode==="ugb"){
+      lab.childNodes[0].nodeValue="Référence du bordereau";ref.placeholder="Ex. 173246";ref.required=true;btn.disabled=false;status.textContent="Ajoute une photo nette du bordereau puis clique sur Lire et préremplir.";
+    }else{
+      lab.childNodes[0].nodeValue=mode==="virement"?"Référence du virement (facultatif)":"Référence / description (facultatif)";ref.placeholder=mode==="virement"?"Ex. Virement compte à compte":"Ex. Confirmation WhatsApp";ref.required=false;btn.disabled=true;status.textContent="Joins la capture ou le justificatif. La lecture automatique UGB n’est pas nécessaire.";
+    }
   }
   bindUgbForm("sandrine");
   bindUgbForm("nelly");
+  document.getElementById("nellyPaymentMode").addEventListener("change",updateNellyPaymentMode);
+  updateNellyPaymentMode();
 
   function monthLabelFromKey(key){var p=key.split("-");var names=["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];return names[Number(p[1])-1]+" "+p[0];}
   function safeReference(v){return String(v||"").replace(/[^A-Za-z0-9_-]/g,"").slice(0,40)||"SansReference";}
@@ -1093,13 +1155,13 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   function renderUgb(person){
     var box=document.getElementById(person+"UgbHistory");
     var rows=state.ugb[person]||[];
-    if(!rows.length){box.innerHTML='<p style="color:var(--muted)">Aucun nouveau bordereau saisi pour le moment.</p>';return;}
+    if(!rows.length){box.innerHTML='<p style="color:var(--muted)">Aucun nouveau paiement saisi pour le moment.</p>';if(person==="nelly"){renderNellyTotals();renderNellyUpcoming();}return;}
     var out="";
     for(var i=0;i<rows.length;i++){
-      var e=rows[i];
-      out+='<div class="bank-entry"><strong>'+esc(e.month)+' — '+esc(e.amount)+'</strong><br>'+esc(e.date)+' · Réf. UGB '+esc(e.reference)+'<br><small>Preuve : '+esc(e.fileName)+'</small></div>';
+      var e=rows[i],mode=e.paymentMode||"ugb",modeLabel=mode==="ugb"?"Bordereau UGB":(mode==="virement"?"Virement compte à compte":"Autre justificatif"),proof=e.proofUrl?'<a href="'+esc(e.proofUrl)+'" target="_blank" rel="noopener">Voir la preuve</a>':esc(e.fileName||"Aucune preuve jointe");
+      out+='<div class="bank-entry"><strong>'+esc(e.month)+' — '+esc(e.amount)+'</strong><br>'+esc(e.date)+' · '+esc(modeLabel)+' · Réf. '+esc(e.reference||"—")+'<br><small>Preuve : '+proof+'</small>'+(e.note?'<br><small>Note : '+esc(e.note)+'</small>':'')+'</div>';
     }
-    box.innerHTML=out;
+    box.innerHTML=out;if(person==="nelly"){renderNellyTotals();renderNellyUpcoming();}
   }
 
   function buildMonthOptions(){
