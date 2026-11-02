@@ -1152,10 +1152,10 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     rows.unshift(entry);syncStateToFirebase(true).then(function(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch(e){}render();toast("Septembre restauré dans Firebase");}).catch(function(){state.ugb[person]=rows.filter(function(x){return x!==entry;});render();toast("Échec Firebase : septembre non restauré");});
   }
 
-  // V1.5.5.1 : archivage indépendant des paiements, dans Firestore (pas Firebase Storage).
+  // V1.5.5.2 : chemin Firestore autorisé par les règles existantes ; archivage indépendant des paiements, dans Firestore (pas Firebase Storage).
   // Pièces jointes stockées en morceaux, accessibles depuis les appareils authentifiés autorisés.
   function ugbAttachmentId(person,month){return person+'_'+canonicalMonth(month).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]/g,'_').toLowerCase();}
-  function ugbDocRef(person,month){return db.collection('bordereaux_ugb').doc(ugbAttachmentId(person,month));}
+  function ugbDocRef(person,month){return db.collection('loyers').doc('gestion-loyers-partagee').collection('bordereaux_ugb').doc(ugbAttachmentId(person,month));}
   function ugbFileToBase64(file){return new Promise(function(resolve,reject){var reader=new FileReader();reader.onload=function(){resolve(String(reader.result).split(',')[1]);};reader.onerror=function(){reject(new Error('Lecture du fichier impossible'));};reader.readAsDataURL(file);});}
   async function attachUgbDocument(person,index){
     var e=(state.ugb[person]||[])[index];if(!e)return;

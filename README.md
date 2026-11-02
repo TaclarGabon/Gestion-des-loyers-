@@ -1,11 +1,7 @@
-# Gestion des loyers V1.5.5.1 — Test archivage UGB
+# Gestion des loyers V1.5.5.2 — correction archivage UGB
 
-Conserve l’interface V1.5.5.0 et les paiements existants. Ajoute Voir et Joindre / Remplacer la copie pour les lignes UGB Sandrine et Nelly.
+Correction ciblée : les copies UGB sont désormais enregistrées sous `loyers/gestion-loyers-partagee/bordereaux_ugb/{locataire_mois}/blocs/...`, chemin couvert par les règles Firestore communiquées. Aucun changement des paiements ni de la présentation.
 
-Stockage : Cloud Firestore, collection `bordereaux_ugb`, documents par locataire et mois, sous-collection `blocs` (base64). Pas Firebase Storage, pas de forfait Blaze requis pour ce mécanisme. Limite 3 Mo par pièce, formats JPG PNG WEBP PDF.
+Tester un seul bordereau d’octobre depuis le site hébergé avec connexion Firebase, puis vérifier sur un deuxième appareil. Ne pas archiver de documents bancaires non masqués tant que les règles Firestore n'ont pas été restreintes aux comptes autorisés. Les règles actuelles autorisent tout utilisateur authentifié du projet.
 
-**IMPORTANT :** Fonctionnement conditionné par les règles de sécurité Firestore autorisant exclusivement les utilisateurs authentifiés habilités. Vérifier les règles AVANT d’archiver des pièces bancaires. Ne pas ouvrir cette collection publiquement. Un test depuis deux comptes/appareils est indispensable. Les données ne sont pas chiffrées de bout en bout.
-
-Aucun fichier ancien n’est récupéré automatiquement, et le nom d’un fichier ne prouve pas son archivage. Le bouton Voir télécharge le document (sur mobile, il peut s’ouvrir dans le visualiseur de téléchargements).
-
-Ne pas déployer sur main sans contrôle des règles et test ; utiliser une branche de test. Les modifications n’affectent pas les paiements.
+Limites : 3 Mo par fichier ; Firestore n’est pas un stockage documentaire idéal pour de nombreux fichiers ; test réel non encore effectué.
