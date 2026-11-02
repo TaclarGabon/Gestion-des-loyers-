@@ -1017,17 +1017,21 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   }
   dedupeUgb("sandrine");dedupeUgb("nelly");
 
+  var editingUgb={sandrine:null,nelly:null};
   function bindUgbForm(person){
     var form=document.getElementById(person+"UgbForm");
     form.addEventListener("submit",async function(e){
       e.preventDefault();
       var proof=document.getElementById(person+"Proof").files[0];
       var entry={month:canonicalMonth(document.getElementById(person+"Month").value.trim()),date:document.getElementById(person+"Date").value,reference:normalizeRef(document.getElementById(person+"Reference").value.trim()),amount:document.getElementById(person+"Amount").value.trim(),fileName:proof?proof.name:"Aucune preuve jointe"};
-      var duplicate=(state.ugb[person]||[]).find(function(x){return sameUgb(x,entry);});
+      var editing=editingUgb[person];
+      var duplicate=(state.ugb[person]||[]).find(function(x,i){return i!==editing && sameUgb(x,entry);});
       if(duplicate){toast("Ce bordereau est déjà enregistré");return;}
-      state.ugb[person].unshift(entry);
-      try{await syncStateToFirebase(true);try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch(_e){}addPaymentToFirebase("UGB",person,entry);form.reset();render();toast("Bordereau UGB enregistré — "+entry.month+" est maintenant pris en compte");}
-      catch(err){state.ugb[person]=state.ugb[person].filter(function(x){return x!==entry;});render();toast("Sauvegarde Firebase échouée — rien n’a été ajouté");}
+      var previousRows=state.ugb[person].slice();
+      if(editing!==null && state.ugb[person][editing]){entry.fileName=proof?proof.name:state.ugb[person][editing].fileName;state.ugb[person][editing]=entry;}
+      else state.ugb[person].unshift(entry);
+      try{await syncStateToFirebase(true);try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch(_e){}if(editing===null)addPaymentToFirebase("UGB",person,entry);editingUgb[person]=null;form.reset();render();toast("Bordereau UGB enregistré — "+entry.month+" est maintenant pris en compte");}
+      catch(err){state.ugb[person]=previousRows;render();toast("Sauvegarde Firebase échouée — anciennes données conservées");}
     });
   }
   bindUgbForm("sandrine");
@@ -1137,12 +1141,21 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   }
   function editUgb(person,index){
     var e=(state.ugb[person]||[])[index];if(!e)return;document.getElementById(person+"Month").value=e.month||"";document.getElementById(person+"Date").value=e.date||"";document.getElementById(person+"Reference").value=e.reference||"";document.getElementById(person+"Amount").value=e.amount||"";
-    state.ugb[person].splice(index,1);render();document.getElementById(person+"Month").scrollIntoView({behavior:"smooth",block:"center"});toast("Corrige puis enregistre de nouveau");
+    editingUgb[person]=index;document.getElementById(person+"Month").scrollIntoView({behavior:"smooth",block:"center"});toast("Mode modification : rien ne sera changé avant Enregistrer");
+  }
+  function cancelUgbEdit(person){editingUgb[person]=null;document.getElementById(person+"UgbForm").reset();render();toast("Modification annulée : paiement conservé");}
+  function restoreSeptember(){
+    var person="sandrine",rows=state.ugb[person]||[];
+    if(rows.some(function(e){return canonicalMonth(e.month)==="Septembre 2026";})){toast("Septembre est déjà présent : aucune modification");return;}
+    if(!confirm("Rétablir septembre 2026 : 320 000 FCFA, reçu le 02/10/2026, UGB 175355 ? Aucune photo ne sera inventée."))return;
+    var entry={month:"Septembre 2026",date:"2026-10-02",reference:"175355",amount:"320 000 FCFA",fileName:"Copie à joindre si retrouvée"};
+    rows.unshift(entry);syncStateToFirebase(true).then(function(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch(e){}render();toast("Septembre restauré dans Firebase");}).catch(function(){state.ugb[person]=rows.filter(function(x){return x!==entry;});render();toast("Échec Firebase : septembre non restauré");});
   }
   function renderUgb(person){
     dedupeUgb(person);var box=document.getElementById(person+"UgbHistory"),rows=state.ugb[person]||[];
     if(!rows.length){box.innerHTML='<p style="color:var(--muted)">Aucun nouveau bordereau saisi pour le moment.</p>';renderTenantRentHistory(person);return;}
-    var out="";for(var i=0;i<rows.length;i++){var e=rows[i];out+='<div class="bank-entry"><strong>'+esc(canonicalMonth(e.month))+' — '+esc(e.amount)+'</strong><br>'+esc(e.date)+' · Réf. UGB '+esc(normalizeRef(e.reference))+'<br><small>Preuve : '+esc(e.fileName)+'</small><div class="entry-actions"><button class="mini-action edit-ugb" data-person="'+person+'" data-index="'+i+'" type="button">✏️ Modifier</button><button class="mini-action danger delete-ugb" data-person="'+person+'" data-index="'+i+'" type="button">🗑️ Supprimer</button></div></div>';}box.innerHTML=out;
+    var out="<div class=\"entry-actions\"><button type=\"button\" class=\"mini-action cancel-ugb\">↩ Annuler une modification</button>"+(person==="sandrine"?"<button type=\"button\" class=\"mini-action restore-sept\">↻ Restaurer septembre 2026 si absent</button>":"")+"</div>";for(var i=0;i<rows.length;i++){var e=rows[i];out+='<div class="bank-entry"><strong>'+esc(canonicalMonth(e.month))+' — '+esc(e.amount)+'</strong><br>'+esc(e.date)+' · Réf. UGB '+esc(normalizeRef(e.reference))+'<br><small>Preuve : '+esc(e.fileName)+'</small><div class="entry-actions"><button class="mini-action edit-ugb" data-person="'+person+'" data-index="'+i+'" type="button">✏️ Modifier</button><button class="mini-action danger delete-ugb" data-person="'+person+'" data-index="'+i+'" type="button">🗑️ Supprimer</button></div></div>';}box.innerHTML=out;
+    box.querySelectorAll(".cancel-ugb").forEach(function(b){b.addEventListener("click",function(){cancelUgbEdit(person);});});box.querySelectorAll(".restore-sept").forEach(function(b){b.addEventListener("click",restoreSeptember);});
     box.querySelectorAll(".delete-ugb").forEach(function(b){b.addEventListener("click",function(){deleteUgb(this.dataset.person,Number(this.dataset.index));});});box.querySelectorAll(".edit-ugb").forEach(function(b){b.addEventListener("click",function(){editUgb(this.dataset.person,Number(this.dataset.index));});});renderTenantRentHistory(person);
   }
 
