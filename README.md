@@ -1,7 +1,9 @@
-# Gestion des loyers V1.5.5.2 — correction archivage UGB
+# Gestion des loyers V1.5.5.3 — Langley
 
-Correction ciblée : les copies UGB sont désormais enregistrées sous `loyers/gestion-loyers-partagee/bordereaux_ugb/{locataire_mois}/blocs/...`, chemin couvert par les règles Firestore communiquées. Aucun changement des paiements ni de la présentation.
+Même interface que V1.5.5.2. Dans les mois déjà payés de Langley, boutons « Joindre / Remplacer la copie » et « Voir » pour archiver les preuves Interac dans Firestore (sous loyers/gestion-loyers-partagee/bordereaux_interac). Pas de modification des données de paiement.
 
-Tester un seul bordereau d’octobre depuis le site hébergé avec connexion Firebase, puis vérifier sur un deuxième appareil. Ne pas archiver de documents bancaires non masqués tant que les règles Firestore n'ont pas été restreintes aux comptes autorisés. Les règles actuelles autorisent tout utilisateur authentifié du projet.
+Déploiement : extraire le ZIP puis remplacer index.html à la racine du dépôt GitHub Pages. Ne pas téléverser le ZIP lui-même comme index.html.
 
-Limites : 3 Mo par fichier ; Firestore n’est pas un stockage documentaire idéal pour de nombreux fichiers ; test réel non encore effectué.
+Test : utiliser une preuve masquée de moins de 3 Mo, vérifier « Voir » sur ordinateur puis téléphone. Les originaux bancaires non masqués ne doivent pas être archivés avant restriction des règles Firestore aux comptes autorisés.
+
+La reconnaissance OCR n'est pas corrigée par cette version. Les copies Interac précédemment stockées via Firebase Storage ne sont pas automatiquement migrées.
